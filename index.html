@@ -1,61 +1,61 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Rutinas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rutinas</title>
 
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-      padding: 20px;
-    }
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f5f5f5;
+  margin: 0;
+  padding: 20px;
+}
 
-    h1 { margin-bottom: 5px; }
+h1 { margin-bottom: 5px; }
 
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 15px;
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 15px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-    .done {
-      text-decoration: line-through;
-      opacity: 0.5;
-    }
+.done {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
 
-    .badge {
-      background: #f3e7d3;
-      color: #8a6d3b;
-      padding: 4px 8px;
-      border-radius: 10px;
-      font-size: 12px;
-      margin-left: 8px;
-    }
+.badge {
+  background: #f3e7d3;
+  color: #8a6d3b;
+  padding: 4px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-left: 8px;
+}
 
-    .check {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 2px solid #ccc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
+.check {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
 
-    .check.active {
-      background: #2ecc71;
-      color: white;
-      border: none;
-    }
-  </style>
+.check.active {
+  background: #2ecc71;
+  color: white;
+  border: none;
+}
+</style>
 </head>
 
 <body>
@@ -65,73 +65,99 @@
 
 <script>
 
+const API = "/.netlify/functions/sheets";
+
+function hoyFecha() {
+  return new Date().toISOString().slice(0,10);
+}
+
 function getDiasRestantes(item) {
   if (!item.inicio || !item.diasCiclo) return null;
 
   const inicio = new Date(item.inicio);
   const hoy = new Date();
 
-  const diffTime = hoy - inicio;
-  const diasTranscurridos = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const diff = hoy - inicio;
+  const diasTranscurridos = Math.floor(diff / (1000*60*60*24));
 
   const restantes = item.diasCiclo - diasTranscurridos;
 
   return restantes > 0 ? restantes : null;
 }
 
-// MOCK DATA (tu app ya lo reemplaza dinámicamente)
-const data = [
-  {
-    nombre: "Doxiciclina 100 mg",
-    note: "Después del desayuno",
-    inicio: "2026-04-11",
-    diasCiclo: 20,
-    done: true
-  },
-  {
-    nombre: "Trameel S comprimidos",
-    note: "Sublingual",
-    inicio: "2026-04-11",
-    diasCiclo: 90,
-    done: false
-  }
-];
+async function cargar() {
+  const fecha = hoyFecha();
 
-function render() {
+  const planRes = await fetch(API, {
+    method: "POST",
+    body: JSON.stringify({ action: "getPlan" })
+  });
+
+  const checksRes = await fetch(API, {
+    method: "POST",
+    body: JSON.stringify({ action: "getChecks", data: { fecha } })
+  });
+
+  const { plan } = await planRes.json();
+  const { checks } = await checksRes.json();
+
+  render(plan, checks, fecha);
+}
+
+function render(plan, checks, fecha) {
   const container = document.getElementById("rutinas");
   container.innerHTML = "";
 
-  data.forEach(item => {
+  Object.entries(plan).forEach(([categoria, tiempos]) => {
+    Object.entries(tiempos).forEach(([tiempo, items]) => {
+      Object.entries(items).forEach(([nombre, item]) => {
 
-    const diasRestantes = getDiasRestantes(item);
+        const done = checks?.[categoria]?.[tiempo]?.[nombre] || false;
+        const diasRestantes = getDiasRestantes(item);
 
-    const div = document.createElement("div");
-    div.className = "card";
+        const div = document.createElement("div");
+        div.className = "card";
 
-    div.innerHTML = `
-      <div>
-        <div class="${item.done ? 'done' : ''}">
-          ${item.nombre}
-          ${diasRestantes ? `<span class="badge">faltan ${diasRestantes}d</span>` : ''}
-        </div>
-        <div>${item.note}</div>
-      </div>
+        div.innerHTML = `
+          <div>
+            <div class="${done ? 'done' : ''}">
+              ${nombre}
+              ${diasRestantes ? `<span class="badge">faltan ${diasRestantes}d</span>` : ''}
+            </div>
+            <div>${item.note || ''}</div>
+          </div>
 
-      <div class="check ${item.done ? 'active' : ''}" onclick="toggle(this)">
-        ${item.done ? '✓' : ''}
-      </div>
-    `;
+          <div class="check ${done ? 'active' : ''}" onclick="toggle(this,'${fecha}','${categoria}','${tiempo}','${nombre}')">
+            ${done ? '✓' : ''}
+          </div>
+        `;
 
-    container.appendChild(div);
+        container.appendChild(div);
+      });
+    });
   });
 }
 
-function toggle(el) {
-  el.classList.toggle("active");
-  el.innerHTML = el.classList.contains("active") ? "✓" : "";
+async function toggle(el, fecha, categoria, tiempo, nombre) {
+  const active = el.classList.toggle("active");
+  el.innerHTML = active ? "✓" : "";
+
+  await fetch(API, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "saveCheck",
+      data: {
+        fecha,
+        categoria,
+        tiempo,
+        nombre,
+        completado: active
+      }
+    })
+  });
 }
 
-render();
+cargar();
 
 </script>
 
