@@ -43,6 +43,18 @@ function normalize(v) {
   return String(v || "").toLowerCase().trim();
 }
 
+function cleanList(v) {
+  return normalize(v)
+    .replace(/á/g, "a")
+    .replace(/é/g, "e")
+    .replace(/í/g, "i")
+    .replace(/ó/g, "o")
+    .replace(/ú/g, "u")
+    .split(",")
+    .map(x => x.trim())
+    .filter(Boolean);
+}
+
 function mapCategoria(c) {
   c = normalize(c);
 
@@ -55,8 +67,8 @@ function mapCategoria(c) {
   return "wellness";
 }
 
-function frecuenciaToTiempos(f) {
-  f = normalize(f)
+function frecuenciaToTiempos(frecuencia) {
+  let f = normalize(frecuencia)
     .replace("cada", "")
     .replace("horas", "h")
     .replace("hora", "h")
@@ -70,26 +82,56 @@ function frecuenciaToTiempos(f) {
   return ["manana"];
 }
 
+function horarioToTiempos(horario, frecuencia) {
+  const h = cleanList(horario);
+
+  if (h.length > 0) {
+    return h.map(x => {
+      if (x === "mañana") return "manana";
+      if (x === "manana") return "manana";
+      if (x === "tarde") return "tarde";
+      if (x === "noche") return "noche";
+      return x;
+    }).filter(x => ["manana", "tarde", "noche"].includes(x));
+  }
+
+  return frecuenciaToTiempos(frecuencia);
+}
+
 function buildPlan(rows) {
   const plan = {};
 
   for (const row of rows) {
-    const [nombre, categoria, frecuencia, inicio, duracion, nota, activo] = row;
+    const [
+      nombre,
+      categoria,
+      frecuencia,
+      horario,
+      dias,
+      inicio,
+      duracion,
+      nota,
+      activo
+    ] = row;
 
     if (!nombre) continue;
-    if (normalize(activo) === "no") continue;
+    if (["no", "false", "0", "inactivo"].includes(normalize(activo))) continue;
 
     const cat = mapCategoria(categoria);
-    const tiempos = frecuenciaToTiempos(frecuencia);
+    const tiempos = horarioToTiempos(horario, frecuencia);
+    const diasFinal = dias && normalize(dias) !== "todos"
+      ? cleanList(dias)
+      : "todos";
 
     if (!plan[cat]) plan[cat] = { manana: {}, tarde: {}, noche: {} };
 
     for (const t of tiempos) {
       plan[cat][t][nombre] = {
-        days: "todos",
+        days: diasFinal,
         note: nota || "",
         inicio: inicio || null,
-        diasCiclo: duracion ? Number(duracion) : null
+        diasCiclo: duracion ? Number(duracion) : null,
+        frecuencia: frecuencia || "",
       };
     }
   }
@@ -104,12 +146,16 @@ exports.handler = async (event) => {
     "Content-Type": "application/json",
   };
 
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 200, headers, body: "" };
+  }
+
   try {
     const sheets = await getSheets();
     const { action, data } = JSON.parse(event.body || "{}");
 
     if (action === "getPlan") {
-      const rows = await readSheet(sheets, "plan!A2:G");
+      const rows = await readSheet(sheets, "plan!A2:I");
       const plan = buildPlan(rows);
 
       return {
@@ -145,7 +191,7 @@ exports.handler = async (event) => {
       const { fecha, categoria, tiempo, nombre, completado } = data;
 
       const rows = await readSheet(sheets, "checks!A2:E");
-      const newRows = [["fecha","categoria","tiempo","nombre","completado"]];
+      const newRows = [["fecha", "categoria", "tiempo", "nombre", "completado"]];
       let found = false;
 
       for (const r of rows) {
