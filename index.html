@@ -2,174 +2,510 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Rutinas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#f7f7f5" />
+<title>Rutinas v3 simple</title>
 
 <style>
-body {
-  font-family: -apple-system, sans-serif;
-  background: #f7f7f7;
-  margin: 0;
-  padding: 16px;
+:root{
+  --bg:#f7f7f5;
+  --card:#fff;
+  --text:#181816;
+  --muted:#6d6d68;
+  --border:rgba(0,0,0,.10);
+  --green:#1D9E75;
+  --amber-bg:#FAEEDA;
+  --amber-text:#7A4B00;
+  --radius:18px;
 }
-
-h1 {
-  margin-bottom: 8px;
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
-
-.section {
-  margin-top: 20px;
+.app{
+  max-width:520px;
+  margin:0 auto;
+  padding:calc(18px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));
 }
-
-.card {
-  background: white;
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:14px;
 }
-
-.done {
-  text-decoration: line-through;
-  opacity: 0.5;
+h1{
+  font-size:34px;
+  line-height:1;
+  margin:0 0 8px;
+  letter-spacing:-.04em;
 }
-
-button {
-  background: #22c55e;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 6px 10px;
+.date{
+  color:var(--muted);
+  font-size:15px;
+}
+.status{
+  font-size:13px;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:4px;
+}
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--muted);
+}
+.dot.ok{background:var(--green)}
+.dot.err{background:#E24B4A}
+.summary{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px;
+  margin:14px 0 16px;
+}
+.summary-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+.summary-title{
+  font-size:15px;
+  font-weight:650;
+}
+.summary-pct{
+  font-size:18px;
+  font-weight:700;
+}
+.bar{
+  height:8px;
+  background:rgba(0,0,0,.08);
+  border-radius:999px;
+  overflow:hidden;
+}
+.fill{
+  height:100%;
+  width:0%;
+  background:var(--green);
+  border-radius:999px;
+  transition:.25s width ease;
+}
+.summary-foot{
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+  font-size:13px;
+  color:var(--muted);
+}
+.time-section{
+  margin-top:16px;
+}
+.time-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:0 2px 8px;
+}
+.time-title{
+  font-size:20px;
+  font-weight:800;
+}
+.time-count{
+  font-size:13px;
+  color:var(--muted);
+}
+.item{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:13px 12px;
+  margin-bottom:9px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.item-left{
+  min-width:0;
+  flex:1;
+}
+.item-name{
+  font-size:16px;
+  font-weight:650;
+  line-height:1.25;
+}
+.item.done .item-name{
+  text-decoration:line-through;
+  color:#9b9b95;
+}
+.item-meta{
+  margin-top:3px;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.35;
+}
+.badge{
+  display:inline-block;
+  margin-left:4px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:var(--amber-bg);
+  color:var(--amber-text);
+  font-size:11px;
+  vertical-align:1px;
+}
+.check{
+  width:34px;
+  height:34px;
+  flex:0 0 34px;
+  border-radius:50%;
+  border:1.5px solid var(--border);
+  background:white;
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.item.done .check{
+  background:var(--green);
+  border-color:var(--green);
+}
+.empty{
+  border:1px dashed var(--border);
+  color:var(--muted);
+  border-radius:14px;
+  padding:14px;
+  font-size:14px;
+  text-align:center;
+  background:rgba(255,255,255,.45);
+}
+.small-btn{
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  border-radius:999px;
+  padding:8px 12px;
+  font-size:13px;
+  cursor:pointer;
+}
+.error-box{
+  display:none;
+  background:#fff;
+  border:1px solid rgba(226,75,74,.25);
+  color:#8a1f1f;
+  border-radius:14px;
+  padding:12px;
+  margin:12px 0;
+  font-size:13px;
+  line-height:1.45;
+  white-space:pre-wrap;
 }
 </style>
 </head>
 
 <body>
+<div class="app">
+  <div class="top">
+    <div>
+      <h1>Hoy</h1>
+      <div class="date" id="date"></div>
+      <div class="status"><span class="dot" id="status-dot"></span><span id="status">Cargando...</span></div>
+    </div>
+    <button class="small-btn" onclick="cargar()">Actualizar</button>
+  </div>
 
-<h1>Hoy</h1>
-<div id="status">Cargando...</div>
+  <div class="error-box" id="error-box"></div>
 
-<div class="section">
-  <h2>Mañana</h2>
-  <div id="manana"></div>
-</div>
+  <div class="summary">
+    <div class="summary-row">
+      <div class="summary-title">Progreso del día</div>
+      <div class="summary-pct" id="pct">0%</div>
+    </div>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <div class="summary-foot">
+      <span id="done-count">0/0 completados</span>
+      <span id="pending-count">0 pendientes</span>
+    </div>
+  </div>
 
-<div class="section">
-  <h2>Tarde</h2>
-  <div id="tarde"></div>
-</div>
+  <section class="time-section">
+    <div class="time-header">
+      <div class="time-title">Mañana</div>
+      <div class="time-count" id="count-manana"></div>
+    </div>
+    <div id="manana"></div>
+  </section>
 
-<div class="section">
-  <h2>Noche</h2>
-  <div id="noche"></div>
+  <section class="time-section">
+    <div class="time-header">
+      <div class="time-title">Tarde</div>
+      <div class="time-count" id="count-tarde"></div>
+    </div>
+    <div id="tarde"></div>
+  </section>
+
+  <section class="time-section">
+    <div class="time-header">
+      <div class="time-title">Noche</div>
+      <div class="time-count" id="count-noche"></div>
+    </div>
+    <div id="noche"></div>
+  </section>
 </div>
 
 <script>
-
 const API = "/.netlify/functions/sheets";
+const TIMES = ["manana","tarde","noche"];
+const TIME_LABEL = { manana:"Mañana", tarde:"Tarde", noche:"Noche" };
+const CAT_LABEL = {
+  dermato:"Derma",
+  suplementos:"Suplemento",
+  ejercicio:"Ejercicio",
+  bienestar:"Bienestar",
+  sueno:"Sueño",
+  wellness:"Wellness"
+};
+const DAYS_ES = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
 
-let plan = [];
-let checks = [];
+let planObj = {};
+let checksObj = {};
+let todayItems = [];
 
-async function cargar() {
+function pad(n){ return String(n).padStart(2,"0"); }
+
+function todayKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function todayDow(){
+  return DAYS_ES[new Date().getDay()];
+}
+
+function localDateText(){
+  const d = new Date();
+  const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  const dia = todayDow();
+  return dia.charAt(0).toUpperCase()+dia.slice(1)+`, ${d.getDate()} de ${meses[d.getMonth()]}`;
+}
+
+function setStatus(text, type){
+  document.getElementById("status").textContent = text;
+  const dot = document.getElementById("status-dot");
+  dot.className = "dot" + (type === "ok" ? " ok" : type === "err" ? " err" : "");
+}
+
+function showError(msg){
+  const box = document.getElementById("error-box");
+  if(!msg){
+    box.style.display = "none";
+    box.textContent = "";
+    return;
+  }
+  box.style.display = "block";
+  box.textContent = msg;
+}
+
+async function postSheets(action, data = {}){
+  const res = await fetch(API, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ action, data })
+  });
+
+  const raw = await res.text();
+  let json;
   try {
+    json = JSON.parse(raw);
+  } catch(e) {
+    throw new Error(`La función no regresó JSON.\nStatus: ${res.status}\nRespuesta: ${raw.slice(0,250)}`);
+  }
+
+  if(!res.ok || json.error){
+    throw new Error(json.error || `Error HTTP ${res.status}`);
+  }
+
+  return json;
+}
+
+async function cargar(){
+  try{
+    showError("");
+    setStatus("Sincronizando...", "");
+
+    const fecha = todayKey();
 
     const [planRes, checksRes] = await Promise.all([
-      fetch(API, {
-        method: "POST",
-        body: JSON.stringify({ action: "getPlan" })
-      }),
-      fetch(API, {
-        method: "POST",
-        body: JSON.stringify({ action: "getChecks" })
-      })
+      postSheets("getPlan"),
+      postSheets("getChecks", { fecha })
     ]);
 
-    const planData = await planRes.json();
-    const checksData = await checksRes.json();
+    planObj = planRes.plan || {};
+    checksObj = checksRes.checks || {};
 
-    plan = planData;
-    checks = checksData;
-
-    document.getElementById("status").innerText = "Sincronizado";
-
+    setStatus("Sincronizado", "ok");
     render();
 
-  } catch (e) {
-    document.getElementById("status").innerText = "Error conexión";
+  }catch(e){
     console.error(e);
+    setStatus("Error conexión", "err");
+    showError(e.message || String(e));
   }
 }
 
-function activoHoy(p) {
-  if (!p.inicio || !p.diasCiclo) return true;
-
-  const hoy = new Date();
-  const inicio = new Date(p.inicio);
-
-  const diff = Math.floor((hoy - inicio) / (1000 * 60 * 60 * 24));
-
-  return diff >= 0 && diff < parseInt(p.diasCiclo);
+function getDiasRestantes(cfg){
+  if(!cfg || !cfg.inicio || !cfg.diasCiclo) return null;
+  const inicio = new Date(cfg.inicio + "T12:00:00");
+  const hoy = new Date(todayKey() + "T12:00:00");
+  const diff = Math.round((hoy - inicio) / 86400000);
+  const total = Number(cfg.diasCiclo);
+  if(!total) return null;
+  return Math.max(0, total - diff);
 }
 
-function render() {
+function isActiveCfg(cfg){
+  if(!cfg) return false;
 
-  ["manana", "tarde", "noche"].forEach(t => {
+  const dow = todayDow();
+  const dias = cfg.days ?? cfg.dias ?? "todos";
+
+  let dayOk = false;
+  if(dias === "todos") dayOk = true;
+  else if(Array.isArray(dias)) dayOk = dias.includes(dow);
+  else dayOk = String(dias).split(",").map(x=>x.trim()).includes(dow);
+
+  if(!dayOk) return false;
+
+  if(cfg.inicio){
+    if(cfg.inicio > todayKey()) return false;
+    if(cfg.diasCiclo && getDiasRestantes(cfg) <= 0) return false;
+  }
+
+  return true;
+}
+
+function flattenPlan(){
+  const out = [];
+  Object.entries(planObj || {}).forEach(([categoria, times])=>{
+    TIMES.forEach(tiempo=>{
+      Object.entries((times && times[tiempo]) || {}).forEach(([nombre, cfg])=>{
+        if(isActiveCfg(cfg)){
+          out.push({
+            categoria,
+            tiempo,
+            nombre,
+            note: cfg.note || cfg.nota || "",
+            diasRestantes: cfg.diasCiclo ? getDiasRestantes(cfg) : null
+          });
+        }
+      });
+    });
+  });
+  return out;
+}
+
+function getCheck(categoria, tiempo, nombre){
+  return !!(checksObj &&
+    checksObj[categoria] &&
+    checksObj[categoria][tiempo] &&
+    checksObj[categoria][tiempo][nombre]);
+}
+
+function escapeAttr(s){
+  return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/'/g,"&#39;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function render(){
+  document.getElementById("date").textContent = localDateText();
+
+  TIMES.forEach(t=>{
     document.getElementById(t).innerHTML = "";
+    document.getElementById("count-"+t).textContent = "";
   });
 
-  const hoy = new Date().toISOString().split("T")[0];
+  todayItems = flattenPlan();
 
-  plan
-    .filter(p => activoHoy(p))
-    .forEach(p => {
+  let total = todayItems.length;
+  let done = todayItems.filter(it => getCheck(it.categoria, it.tiempo, it.nombre)).length;
+  let pct = total ? Math.round(done / total * 100) : 0;
 
-      const container = document.getElementById(p.tiempo);
+  document.getElementById("pct").textContent = pct + "%";
+  document.getElementById("fill").style.width = pct + "%";
+  document.getElementById("done-count").textContent = `${done}/${total} completados`;
+  document.getElementById("pending-count").textContent = `${Math.max(0,total-done)} pendientes`;
 
-      if (!container) return;
+  TIMES.forEach(tiempo=>{
+    const items = todayItems.filter(it => it.tiempo === tiempo);
+    const cont = document.getElementById(tiempo);
+    const doneTime = items.filter(it => getCheck(it.categoria, it.tiempo, it.nombre)).length;
+    document.getElementById("count-"+tiempo).textContent = items.length ? `${doneTime}/${items.length}` : "";
 
-      const isDone = checks.find(c =>
-        c.nombre === p.nombre &&
-        c.fecha === hoy &&
-        c.tiempo === p.tiempo
-      );
+    if(!items.length){
+      cont.innerHTML = `<div class="empty">Nada programado para ${TIME_LABEL[tiempo].toLowerCase()}.</div>`;
+      return;
+    }
+
+    items.forEach(it=>{
+      const doneItem = getCheck(it.categoria, it.tiempo, it.nombre);
+      const badge = it.diasRestantes !== null ? `<span class="badge">${it.diasRestantes}d</span>` : "";
+      const nota = it.note ? ` · ${escapeHtml(it.note)}` : "";
+      const meta = `${CAT_LABEL[it.categoria] || it.categoria}${nota}${badge}`;
 
       const div = document.createElement("div");
-      div.className = "card " + (isDone ? "done" : "");
-
+      div.className = "item" + (doneItem ? " done" : "");
       div.innerHTML = `
-        <span>${p.nombre}</span>
-        <button onclick="toggle('${p.nombre}','${p.tiempo}')">
-          ${isDone ? "✓" : "OK"}
-        </button>
+        <div class="item-left">
+          <div class="item-name">${escapeHtml(it.nombre)}</div>
+          <div class="item-meta">${meta}</div>
+        </div>
+        <button class="check" aria-label="Completar"
+          onclick="toggleCheck('${escapeAttr(it.categoria)}','${escapeAttr(it.tiempo)}','${escapeAttr(it.nombre)}')">✓</button>
       `;
-
-      container.appendChild(div);
+      cont.appendChild(div);
     });
+  });
 }
 
-async function toggle(nombre, tiempo) {
+async function toggleCheck(categoria, tiempo, nombre){
+  try{
+    const current = getCheck(categoria, tiempo, nombre);
+    if(!checksObj[categoria]) checksObj[categoria] = {};
+    if(!checksObj[categoria][tiempo]) checksObj[categoria][tiempo] = {};
+    checksObj[categoria][tiempo][nombre] = !current;
+    render();
 
-  const hoy = new Date().toISOString().split("T")[0];
-
-  await fetch(API, {
-    method: "POST",
-    body: JSON.stringify({
-      action: "toggleCheck",
-      nombre,
+    await postSheets("saveCheck", {
+      fecha: todayKey(),
+      categoria,
       tiempo,
-      fecha: hoy
-    })
-  });
+      nombre,
+      completado: !current
+    });
 
-  cargar();
+    setStatus("Sincronizado", "ok");
+  }catch(e){
+    console.error(e);
+    setStatus("Error guardando", "err");
+    showError(e.message || String(e));
+    await cargar();
+  }
 }
 
 cargar();
-
 </script>
-
 </body>
 </html>
