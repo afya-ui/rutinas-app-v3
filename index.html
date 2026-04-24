@@ -106,21 +106,45 @@ h1{
   color:var(--muted);
 }
 .time-section{
-  margin-top:16px;
+  margin-top:14px;
 }
 .time-header{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:14px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin:0 2px 8px;
+  cursor:pointer;
+  user-select:none;
+}
+.time-title-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 .time-title{
   font-size:20px;
   font-weight:800;
 }
-.time-count{
-  font-size:13px;
+.caret{
   color:var(--muted);
+  font-size:15px;
+  width:18px;
+  text-align:center;
+}
+.time-count{
+  font-size:14px;
+  color:var(--muted);
+  font-weight:650;
+}
+.time-body{
+  margin-top:8px;
+  display:none;
+}
+.time-section.open .time-body{
+  display:block;
 }
 .item{
   background:var(--card);
@@ -136,6 +160,19 @@ h1{
 .item-left{
   min-width:0;
   flex:1;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+.item-icon{
+  width:24px;
+  flex:0 0 24px;
+  font-size:18px;
+  line-height:1.2;
+  margin-top:1px;
+}
+.item-text{
+  min-width:0;
 }
 .item-name{
   font-size:16px;
@@ -188,6 +225,7 @@ h1{
   font-size:14px;
   text-align:center;
   background:rgba(255,255,255,.45);
+  margin-bottom:9px;
 }
 .small-btn{
   border:1px solid var(--border);
@@ -238,28 +276,37 @@ h1{
     </div>
   </div>
 
-  <section class="time-section">
-    <div class="time-header">
-      <div class="time-title">Mañana</div>
+  <section class="time-section" id="sec-manana">
+    <div class="time-header" onclick="toggleSection('manana')">
+      <div class="time-title-wrap">
+        <div class="caret" id="caret-manana">▸</div>
+        <div class="time-title">Mañana</div>
+      </div>
       <div class="time-count" id="count-manana"></div>
     </div>
-    <div id="manana"></div>
+    <div class="time-body" id="manana"></div>
   </section>
 
-  <section class="time-section">
-    <div class="time-header">
-      <div class="time-title">Tarde</div>
+  <section class="time-section" id="sec-tarde">
+    <div class="time-header" onclick="toggleSection('tarde')">
+      <div class="time-title-wrap">
+        <div class="caret" id="caret-tarde">▸</div>
+        <div class="time-title">Tarde</div>
+      </div>
       <div class="time-count" id="count-tarde"></div>
     </div>
-    <div id="tarde"></div>
+    <div class="time-body" id="tarde"></div>
   </section>
 
-  <section class="time-section">
-    <div class="time-header">
-      <div class="time-title">Noche</div>
+  <section class="time-section" id="sec-noche">
+    <div class="time-header" onclick="toggleSection('noche')">
+      <div class="time-title-wrap">
+        <div class="caret" id="caret-noche">▸</div>
+        <div class="time-title">Noche</div>
+      </div>
       <div class="time-count" id="count-noche"></div>
     </div>
-    <div id="noche"></div>
+    <div class="time-body" id="noche"></div>
   </section>
 </div>
 
@@ -275,11 +322,28 @@ const CAT_LABEL = {
   sueno:"Sueño",
   wellness:"Wellness"
 };
+const CAT_ICON = {
+  dermato:"🧴",
+  suplementos:"💊",
+  ejercicio:"🏋️",
+  bienestar:"🧘",
+  sueno:"😴",
+  wellness:"✨"
+};
+const CAT_ORDER = {
+  dermato:1,
+  suplementos:2,
+  ejercicio:3,
+  bienestar:4,
+  sueno:5,
+  wellness:6
+};
 const DAYS_ES = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
 
 let planObj = {};
 let checksObj = {};
 let todayItems = [];
+let openSections = {};
 
 function pad(n){ return String(n).padStart(2,"0"); }
 
@@ -290,6 +354,45 @@ function todayKey(){
 
 function todayDow(){
   return DAYS_ES[new Date().getDay()];
+}
+
+function currentTimeSection(){
+  const h = new Date().getHours();
+  if(h >= 5 && h < 12) return "manana";
+  if(h >= 12 && h < 19) return "tarde";
+  return "noche";
+}
+
+function initOpenSections(){
+  const saved = localStorage.getItem("openSectionsV3");
+  if(saved){
+    try{
+      openSections = JSON.parse(saved);
+      return;
+    }catch(e){}
+  }
+  openSections = { manana:false, tarde:false, noche:false };
+  openSections[currentTimeSection()] = true;
+}
+
+function saveOpenSections(){
+  localStorage.setItem("openSectionsV3", JSON.stringify(openSections));
+}
+
+function toggleSection(t){
+  openSections[t] = !openSections[t];
+  saveOpenSections();
+  applyOpenState();
+}
+
+function applyOpenState(){
+  TIMES.forEach(t=>{
+    const sec = document.getElementById("sec-"+t);
+    const caret = document.getElementById("caret-"+t);
+    const isOpen = !!openSections[t];
+    sec.classList.toggle("open", isOpen);
+    caret.textContent = isOpen ? "▾" : "▸";
+  });
 }
 
 function localDateText(){
@@ -411,6 +514,13 @@ function flattenPlan(){
       });
     });
   });
+
+  out.sort((a,b)=>{
+    const catDiff = (CAT_ORDER[a.categoria] || 99) - (CAT_ORDER[b.categoria] || 99);
+    if(catDiff !== 0) return catDiff;
+    return a.nombre.localeCompare(b.nombre);
+  });
+
   return out;
 }
 
@@ -452,7 +562,7 @@ function render(){
     const items = todayItems.filter(it => it.tiempo === tiempo);
     const cont = document.getElementById(tiempo);
     const doneTime = items.filter(it => getCheck(it.categoria, it.tiempo, it.nombre)).length;
-    document.getElementById("count-"+tiempo).textContent = items.length ? `${doneTime}/${items.length}` : "";
+    document.getElementById("count-"+tiempo).textContent = items.length ? `${doneTime}/${items.length}` : "0/0";
 
     if(!items.length){
       cont.innerHTML = `<div class="empty">Nada programado para ${TIME_LABEL[tiempo].toLowerCase()}.</div>`;
@@ -464,13 +574,17 @@ function render(){
       const badge = it.diasRestantes !== null ? `<span class="badge">${it.diasRestantes}d</span>` : "";
       const nota = it.note ? ` · ${escapeHtml(it.note)}` : "";
       const meta = `${CAT_LABEL[it.categoria] || it.categoria}${nota}${badge}`;
+      const icon = CAT_ICON[it.categoria] || "•";
 
       const div = document.createElement("div");
       div.className = "item" + (doneItem ? " done" : "");
       div.innerHTML = `
         <div class="item-left">
-          <div class="item-name">${escapeHtml(it.nombre)}</div>
-          <div class="item-meta">${meta}</div>
+          <div class="item-icon">${icon}</div>
+          <div class="item-text">
+            <div class="item-name">${escapeHtml(it.nombre)}</div>
+            <div class="item-meta">${meta}</div>
+          </div>
         </div>
         <button class="check" aria-label="Completar"
           onclick="toggleCheck('${escapeAttr(it.categoria)}','${escapeAttr(it.tiempo)}','${escapeAttr(it.nombre)}')">✓</button>
@@ -478,6 +592,8 @@ function render(){
       cont.appendChild(div);
     });
   });
+
+  applyOpenState();
 }
 
 async function toggleCheck(categoria, tiempo, nombre){
@@ -505,6 +621,8 @@ async function toggleCheck(categoria, tiempo, nombre){
   }
 }
 
+initOpenSections();
+applyOpenState();
 cargar();
 </script>
 </body>
