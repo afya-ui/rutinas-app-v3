@@ -75,15 +75,23 @@ let checks = [];
 
 async function cargar() {
   try {
-    const res = await fetch(API, {
-      method: "POST",
-      body: JSON.stringify({ action: "getAll" })
-    });
 
-    const data = await res.json();
+    const [planRes, checksRes] = await Promise.all([
+      fetch(API, {
+        method: "POST",
+        body: JSON.stringify({ action: "getPlan" })
+      }),
+      fetch(API, {
+        method: "POST",
+        body: JSON.stringify({ action: "getChecks" })
+      })
+    ]);
 
-    plan = data.plan;
-    checks = data.checks;
+    const planData = await planRes.json();
+    const checksData = await checksRes.json();
+
+    plan = planData;
+    checks = checksData;
 
     document.getElementById("status").innerText = "Sincronizado";
 
