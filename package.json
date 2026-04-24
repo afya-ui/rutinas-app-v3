@@ -1,0 +1,9 @@
+{
+  "name": "rutinas-app",
+  "version": "1.0.0",
+  "description": "App de rutinas diarias con Google Sheets y Claude",
+  "dependencies": {
+    "googleapis": "^144.0.0",
+    "@anthropic-ai/sdk": "^0.39.0"
+  }
+}
