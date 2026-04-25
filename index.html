@@ -146,6 +146,23 @@ h1{
 .time-section.open .time-body{
   display:block;
 }
+.category-group{
+  margin-bottom:12px;
+}
+.category-header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  padding:10px 4px 7px;
+}
+.category-icon{
+  font-size:16px;
+}
 .item{
   background:var(--card);
   border:1px solid var(--border);
@@ -314,30 +331,43 @@ h1{
 const API = "/.netlify/functions/sheets";
 const TIMES = ["manana","tarde","noche"];
 const TIME_LABEL = { manana:"Mañana", tarde:"Tarde", noche:"Noche" };
+
 const CAT_LABEL = {
   dermato:"Derma",
-  suplementos:"Suplemento",
+  derma:"Derma",
+  suplementos:"Suplementos",
+  suplemento:"Suplementos",
   ejercicio:"Ejercicio",
   bienestar:"Bienestar",
   sueno:"Sueño",
+  sueño:"Sueño",
   wellness:"Wellness"
 };
+
 const CAT_ICON = {
   dermato:"🧴",
+  derma:"🧴",
   suplementos:"💊",
+  suplemento:"💊",
   ejercicio:"🏋️",
   bienestar:"🧘",
   sueno:"😴",
+  sueño:"😴",
   wellness:"✨"
 };
+
 const CAT_ORDER = {
   dermato:1,
+  derma:1,
   suplementos:2,
+  suplemento:2,
   ejercicio:3,
   bienestar:4,
   sueno:5,
+  sueño:5,
   wellness:6
 };
+
 const DAYS_ES = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
 
 let planObj = {};
@@ -539,6 +569,53 @@ function escapeHtml(s){
   return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
+function getCategoriaLabel(categoria){
+  return CAT_LABEL[categoria] || categoria || "";
+}
+
+function getCategoriaIcon(categoria){
+  return CAT_ICON[categoria] || "";
+}
+
+function groupByCategoria(items){
+  const groups = {};
+
+  items.forEach(it=>{
+    const cat = it.categoria || "__sin_categoria__";
+    if(!groups[cat]) groups[cat] = [];
+    groups[cat].push(it);
+  });
+
+  return Object.keys(groups).sort((a,b)=>{
+    return (CAT_ORDER[a] || 99) - (CAT_ORDER[b] || 99);
+  }).map(cat=>({
+    categoria: cat,
+    items: groups[cat]
+  }));
+}
+
+function renderItem(it){
+  const doneItem = getCheck(it.categoria, it.tiempo, it.nombre);
+  const badge = it.diasRestantes !== null ? `<span class="badge">faltan ${it.diasRestantes}d</span>` : "";
+  const nota = it.note ? `${escapeHtml(it.note)}` : "";
+  const icon = CAT_ICON[it.categoria] || "•";
+
+  const div = document.createElement("div");
+  div.className = "item" + (doneItem ? " done" : "");
+  div.innerHTML = `
+    <div class="item-left">
+      <div class="item-icon">${icon}</div>
+      <div class="item-text">
+        <div class="item-name">${escapeHtml(it.nombre)}</div>
+        <div class="item-meta">${nota}${badge}</div>
+      </div>
+    </div>
+    <button class="check" aria-label="Completar"
+      onclick="toggleCheck('${escapeAttr(it.categoria)}','${escapeAttr(it.tiempo)}','${escapeAttr(it.nombre)}')">✓</button>
+  `;
+  return div;
+}
+
 function render(){
   document.getElementById("date").textContent = localDateText();
 
@@ -569,27 +646,27 @@ function render(){
       return;
     }
 
-    items.forEach(it=>{
-      const doneItem = getCheck(it.categoria, it.tiempo, it.nombre);
-      const badge = it.diasRestantes !== null ? `<span class="badge">faltan ${it.diasRestantes}d</span>` : "";
-      const nota = it.note ? ` · ${escapeHtml(it.note)}` : "";
-      const meta = `${CAT_LABEL[it.categoria] || it.categoria}${nota}${badge}`;
-      const icon = CAT_ICON[it.categoria] || "•";
+    const grupos = groupByCategoria(items);
 
-      const div = document.createElement("div");
-      div.className = "item" + (doneItem ? " done" : "");
-      div.innerHTML = `
-        <div class="item-left">
-          <div class="item-icon">${icon}</div>
-          <div class="item-text">
-            <div class="item-name">${escapeHtml(it.nombre)}</div>
-            <div class="item-meta">${meta}</div>
-          </div>
-        </div>
-        <button class="check" aria-label="Completar"
-          onclick="toggleCheck('${escapeAttr(it.categoria)}','${escapeAttr(it.tiempo)}','${escapeAttr(it.nombre)}')">✓</button>
-      `;
-      cont.appendChild(div);
+    grupos.forEach(grupo=>{
+      const wrapper = document.createElement("div");
+      wrapper.className = "category-group";
+
+      if(grupo.categoria !== "__sin_categoria__"){
+        const header = document.createElement("div");
+        header.className = "category-header";
+        header.innerHTML = `
+          <span class="category-icon">${getCategoriaIcon(grupo.categoria)}</span>
+          <span>${escapeHtml(getCategoriaLabel(grupo.categoria))}</span>
+        `;
+        wrapper.appendChild(header);
+      }
+
+      grupo.items.forEach(it=>{
+        wrapper.appendChild(renderItem(it));
+      });
+
+      cont.appendChild(wrapper);
     });
   });
 
