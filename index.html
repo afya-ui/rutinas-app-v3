@@ -160,13 +160,14 @@ h1{
   text-transform:uppercase;
   letter-spacing:.04em;
   padding:10px 6px 7px;
-  cursor:pointer;
   user-select:none;
 }
 .category-title{
   display:flex;
   align-items:center;
   gap:8px;
+  cursor:pointer;
+  flex:1;
 }
 .category-caret{
   color:var(--muted);
@@ -176,9 +177,24 @@ h1{
 .category-icon{
   font-size:16px;
 }
+.category-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
 .category-count{
   font-size:12px;
   color:var(--muted);
+}
+.category-summary-btn{
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--text);
+  border-radius:999px;
+  padding:5px 9px;
+  font-size:11px;
+  font-weight:700;
+  cursor:pointer;
 }
 .category-body{
   display:block;
@@ -369,6 +385,25 @@ h1{
   padding:20px 8px;
   border:1px dashed var(--border);
   border-radius:14px;
+}
+.product-summary-row{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:9px;
+  background:#fff;
+}
+.product-summary-top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  font-size:15px;
+  font-weight:750;
+}
+.product-summary-meta{
+  margin-top:5px;
+  color:var(--muted);
+  font-size:13px;
 }
 </style>
 </head>
@@ -687,13 +722,13 @@ function flattenPlan(){
       Object.entries((times && times[tiempo]) || {}).forEach(([nombre, cfg])=>{
         if(isActiveCfg(cfg)){
           out.push({
-  categoria,
-  tiempo,
-  nombre,
-  note: cfg.note || cfg.nota || "",
-  diasRestantes: cfg.diasCiclo ? getDiasRestantes(cfg) : null,
-  diasCicloTotal: cfg.diasCiclo || null
-});
+            categoria,
+            tiempo,
+            nombre,
+            note: cfg.note || cfg.nota || "",
+            diasRestantes: cfg.diasCiclo ? getDiasRestantes(cfg) : null,
+            diasCicloTotal: cfg.diasCiclo || null
+          });
         }
       });
     });
@@ -755,6 +790,16 @@ function formatFecha(fecha){
   return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 
+function cerrarModal(){
+  document.getElementById("history-modal").style.display = "none";
+}
+
+function cerrarModalSiFondo(event){
+  if(event.target && event.target.id === "history-modal"){
+    cerrarModal();
+  }
+}
+
 async function abrirHistorial(categoria, tiempo, nombre){
   try{
     document.getElementById("modal-title").textContent = nombre;
@@ -762,27 +807,19 @@ async function abrirHistorial(categoria, tiempo, nombre){
     document.getElementById("modal-content").innerHTML = `<div class="history-empty">Cargando historial...</div>`;
     document.getElementById("history-modal").style.display = "flex";
 
-    const res = await postSheets("getHistorial", {
-      categoria,
-      tiempo,
-      nombre
-    });
-
+    const res = await postSheets("getHistorial", { categoria, tiempo, nombre });
     const historial = res.historial || [];
+
+    const itemActual = todayItems.find(it =>
+      it.categoria === categoria &&
+      it.tiempo === tiempo &&
+      it.nombre === nombre
+    );
+
     const usados = historial.filter(h=>h.completado).length;
-
-const itemActual = todayItems.find(it =>
-  it.categoria === categoria &&
-  it.tiempo === tiempo &&
-  it.nombre === nombre
-);
-
-const duracionTotal = itemActual && itemActual.diasCicloTotal
-  ? itemActual.diasCicloTotal
-  : historial.length;
-
-const pendientes = Math.max(0, duracionTotal - usados);
-const pct = duracionTotal ? Math.round(usados / duracionTotal * 100) : 0;
+    const duracionTotal = itemActual && itemActual.diasCicloTotal ? itemActual.diasCicloTotal : historial.length;
+    const pendientes = Math.max(0, duracionTotal - usados);
+    const pct = duracionTotal ? Math.round(usados / duracionTotal * 100) : 0;
 
     let html = `
       <div class="history-stats">
@@ -822,13 +859,76 @@ const pct = duracionTotal ? Math.round(usados / duracionTotal * 100) : 0;
   }
 }
 
-function cerrarModal(){
-  document.getElementById("history-modal").style.display = "none";
-}
+async function abrirResumenCategoria(categoria){
+  try{
+    const label = getCategoriaLabel(categoria);
+    const itemsCategoria = todayItems.filter(it => it.categoria === categoria);
 
-function cerrarModalSiFondo(event){
-  if(event.target && event.target.id === "history-modal"){
-    cerrarModal();
+    document.getElementById("modal-title").textContent = label;
+    document.getElementById("modal-subtitle").textContent = "Cumplimiento general de la categoría";
+    document.getElementById("modal-content").innerHTML = `<div class="history-empty">Calculando cumplimiento...</div>`;
+    document.getElementById("history-modal").style.display = "flex";
+
+    let totalEsperado = 0;
+    let totalHecho = 0;
+    let productosHtml = "";
+
+    for(const it of itemsCategoria){
+      const res = await postSheets("getHistorial", {
+        categoria: it.categoria,
+        tiempo: it.tiempo,
+        nombre: it.nombre
+      });
+
+      const historial = res.historial || [];
+      const usados = historial.filter(h=>h.completado).length;
+      const esperado = it.diasCicloTotal ? Number(it.diasCicloTotal) : historial.length;
+      const pendientes = Math.max(0, esperado - usados);
+      const pct = esperado ? Math.round(usados / esperado * 100) : 0;
+
+      totalEsperado += esperado;
+      totalHecho += usados;
+
+      productosHtml += `
+        <div class="product-summary-row">
+          <div class="product-summary-top">
+            <span>${escapeHtml(it.nombre)}</span>
+            <span>${pct}%</span>
+          </div>
+          <div class="product-summary-meta">
+            ${usados}/${esperado} completados · ${pendientes} pendientes · ${TIME_LABEL[it.tiempo]}
+          </div>
+        </div>
+      `;
+    }
+
+    const totalPendiente = Math.max(0, totalEsperado - totalHecho);
+    const pctGeneral = totalEsperado ? Math.round(totalHecho / totalEsperado * 100) : 0;
+
+    const html = `
+      <div class="history-stats">
+        <div class="stat-card">
+          <div class="stat-value">${totalHecho}</div>
+          <div class="stat-label">Hechos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${totalPendiente}</div>
+          <div class="stat-label">Pendientes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${pctGeneral}%</div>
+          <div class="stat-label">Cumplimiento</div>
+        </div>
+      </div>
+
+      ${productosHtml || `<div class="history-empty">No hay productos activos en esta categoría.</div>`}
+    `;
+
+    document.getElementById("modal-content").innerHTML = html;
+
+  }catch(e){
+    console.error(e);
+    document.getElementById("modal-content").innerHTML = `<div class="history-empty">Error cargando resumen.</div>`;
   }
 }
 
@@ -899,14 +999,16 @@ function render(){
 
         const header = document.createElement("div");
         header.className = "category-header";
-        header.onclick = () => toggleCategoria(catId);
         header.innerHTML = `
-          <div class="category-title">
+          <div class="category-title" onclick="toggleCategoria('${catId}')">
             <span class="category-caret" id="cat-caret-${catId}">${openCategories[catId] ? "▾" : "▸"}</span>
             <span class="category-icon">${getCategoriaIcon(grupo.categoria)}</span>
             <span>${escapeHtml(getCategoriaLabel(grupo.categoria))}</span>
           </div>
-          <span class="category-count">${grupo.items.length}</span>
+          <div class="category-actions">
+            <span class="category-count">${grupo.items.length}</span>
+            <button class="category-summary-btn" onclick="abrirResumenCategoria('${escapeAttr(grupo.categoria)}')">Resumen</button>
+          </div>
         `;
         wrapper.appendChild(header);
 
