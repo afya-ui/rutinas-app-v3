@@ -200,6 +200,7 @@ h1{
   display:flex;
   gap:10px;
   align-items:flex-start;
+  cursor:pointer;
 }
 .item-icon{
   width:24px;
@@ -285,6 +286,90 @@ h1{
   line-height:1.45;
   white-space:pre-wrap;
 }
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.38);
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  z-index:999;
+}
+.modal-card{
+  width:100%;
+  max-width:520px;
+  max-height:82vh;
+  overflow:auto;
+  background:var(--card);
+  border-radius:24px 24px 0 0;
+  padding:18px 16px calc(24px + env(safe-area-inset-bottom));
+}
+.modal-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:12px;
+}
+.modal-title{
+  font-size:24px;
+  line-height:1.1;
+  font-weight:800;
+  letter-spacing:-.03em;
+}
+.modal-subtitle{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:13px;
+}
+.modal-close{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:999px;
+  width:34px;
+  height:34px;
+  font-size:20px;
+  cursor:pointer;
+}
+.history-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:14px 0;
+}
+.stat-card{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:10px;
+  background:#fff;
+}
+.stat-value{
+  font-size:20px;
+  font-weight:800;
+}
+.stat-label{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:3px;
+}
+.history-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid rgba(0,0,0,.07);
+  padding:10px 2px;
+  font-size:14px;
+}
+.history-row:last-child{
+  border-bottom:none;
+}
+.history-empty{
+  color:var(--muted);
+  text-align:center;
+  padding:20px 8px;
+  border:1px dashed var(--border);
+  border-radius:14px;
+}
 </style>
 </head>
 
@@ -345,6 +430,20 @@ h1{
     </div>
     <div class="time-body" id="noche"></div>
   </section>
+</div>
+
+<div class="modal" id="history-modal" onclick="cerrarModalSiFondo(event)">
+  <div class="modal-card">
+    <div class="modal-top">
+      <div>
+        <div class="modal-title" id="modal-title">Producto</div>
+        <div class="modal-subtitle" id="modal-subtitle"></div>
+      </div>
+      <button class="modal-close" onclick="cerrarModal()">×</button>
+    </div>
+
+    <div id="modal-content"></div>
+  </div>
 </div>
 
 <script>
@@ -648,6 +747,80 @@ function groupByCategoria(items){
   }));
 }
 
+function formatFecha(fecha){
+  if(!fecha) return "";
+  const partes = fecha.split("-");
+  if(partes.length !== 3) return fecha;
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+async function abrirHistorial(categoria, tiempo, nombre){
+  try{
+    document.getElementById("modal-title").textContent = nombre;
+    document.getElementById("modal-subtitle").textContent = `${getCategoriaLabel(categoria)} · ${TIME_LABEL[tiempo] || tiempo}`;
+    document.getElementById("modal-content").innerHTML = `<div class="history-empty">Cargando historial...</div>`;
+    document.getElementById("history-modal").style.display = "flex";
+
+    const res = await postSheets("getHistorial", {
+      categoria,
+      tiempo,
+      nombre
+    });
+
+    const historial = res.historial || [];
+    const usados = historial.filter(h=>h.completado).length;
+    const total = historial.length;
+    const pendientes = total - usados;
+    const pct = total ? Math.round(usados / total * 100) : 0;
+
+    let html = `
+      <div class="history-stats">
+        <div class="stat-card">
+          <div class="stat-value">${usados}</div>
+          <div class="stat-label">Usados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${pendientes}</div>
+          <div class="stat-label">Pendientes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${pct}%</div>
+          <div class="stat-label">Cumplimiento</div>
+        </div>
+      </div>
+    `;
+
+    if(!historial.length){
+      html += `<div class="history-empty">Todavía no hay historial para este producto.</div>`;
+    }else{
+      historial.forEach(h=>{
+        html += `
+          <div class="history-row">
+            <span>${formatFecha(h.fecha)}</span>
+            <strong>${h.completado ? "✅ Aplicado" : "❌ No aplicado"}</strong>
+          </div>
+        `;
+      });
+    }
+
+    document.getElementById("modal-content").innerHTML = html;
+
+  }catch(e){
+    console.error(e);
+    document.getElementById("modal-content").innerHTML = `<div class="history-empty">Error cargando historial.</div>`;
+  }
+}
+
+function cerrarModal(){
+  document.getElementById("history-modal").style.display = "none";
+}
+
+function cerrarModalSiFondo(event){
+  if(event.target && event.target.id === "history-modal"){
+    cerrarModal();
+  }
+}
+
 function renderItem(it){
   const doneItem = getCheck(it.categoria, it.tiempo, it.nombre);
   const badge = it.diasRestantes !== null ? `<span class="badge">faltan ${it.diasRestantes}d</span>` : "";
@@ -657,7 +830,7 @@ function renderItem(it){
   const div = document.createElement("div");
   div.className = "item" + (doneItem ? " done" : "");
   div.innerHTML = `
-    <div class="item-left">
+    <div class="item-left" onclick="abrirHistorial('${escapeAttr(it.categoria)}','${escapeAttr(it.tiempo)}','${escapeAttr(it.nombre)}')">
       <div class="item-icon">${icon}</div>
       <div class="item-text">
         <div class="item-name">${escapeHtml(it.nombre)}</div>
