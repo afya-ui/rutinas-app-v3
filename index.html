@@ -687,12 +687,13 @@ function flattenPlan(){
       Object.entries((times && times[tiempo]) || {}).forEach(([nombre, cfg])=>{
         if(isActiveCfg(cfg)){
           out.push({
-            categoria,
-            tiempo,
-            nombre,
-            note: cfg.note || cfg.nota || "",
-            diasRestantes: cfg.diasCiclo ? getDiasRestantes(cfg) : null
-          });
+  categoria,
+  tiempo,
+  nombre,
+  note: cfg.note || cfg.nota || "",
+  diasRestantes: cfg.diasCiclo ? getDiasRestantes(cfg) : null,
+  diasCicloTotal: cfg.diasCiclo || null
+});
         }
       });
     });
@@ -769,9 +770,19 @@ async function abrirHistorial(categoria, tiempo, nombre){
 
     const historial = res.historial || [];
     const usados = historial.filter(h=>h.completado).length;
-    const total = historial.length;
-    const pendientes = total - usados;
-    const pct = total ? Math.round(usados / total * 100) : 0;
+
+const itemActual = todayItems.find(it =>
+  it.categoria === categoria &&
+  it.tiempo === tiempo &&
+  it.nombre === nombre
+);
+
+const duracionTotal = itemActual && itemActual.diasCicloTotal
+  ? itemActual.diasCicloTotal
+  : historial.length;
+
+const pendientes = Math.max(0, duracionTotal - usados);
+const pct = duracionTotal ? Math.round(usados / duracionTotal * 100) : 0;
 
     let html = `
       <div class="history-stats">
