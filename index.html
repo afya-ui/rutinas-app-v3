@@ -152,16 +152,36 @@ h1{
 .category-header{
   display:flex;
   align-items:center;
+  justify-content:space-between;
   gap:8px;
   color:var(--muted);
   font-size:13px;
   font-weight:800;
   text-transform:uppercase;
   letter-spacing:.04em;
-  padding:10px 4px 7px;
+  padding:10px 6px 7px;
+  cursor:pointer;
+  user-select:none;
+}
+.category-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.category-caret{
+  color:var(--muted);
+  font-size:14px;
+  width:14px;
 }
 .category-icon{
   font-size:16px;
+}
+.category-count{
+  font-size:12px;
+  color:var(--muted);
+}
+.category-body{
+  display:block;
 }
 .item{
   background:var(--card);
@@ -374,6 +394,7 @@ let planObj = {};
 let checksObj = {};
 let todayItems = [];
 let openSections = {};
+let openCategories = {};
 
 function pad(n){ return String(n).padStart(2,"0"); }
 
@@ -398,15 +419,30 @@ function initOpenSections(){
   if(saved){
     try{
       openSections = JSON.parse(saved);
-      return;
-    }catch(e){}
+    }catch(e){
+      openSections = { manana:false, tarde:false, noche:false };
+    }
+  }else{
+    openSections = { manana:false, tarde:false, noche:false };
+    openSections[currentTimeSection()] = true;
   }
-  openSections = { manana:false, tarde:false, noche:false };
-  openSections[currentTimeSection()] = true;
+
+  const savedCats = localStorage.getItem("openCategoriesV3");
+  if(savedCats){
+    try{
+      openCategories = JSON.parse(savedCats);
+    }catch(e){
+      openCategories = {};
+    }
+  }
 }
 
 function saveOpenSections(){
   localStorage.setItem("openSectionsV3", JSON.stringify(openSections));
+}
+
+function saveOpenCategories(){
+  localStorage.setItem("openCategoriesV3", JSON.stringify(openCategories));
 }
 
 function toggleSection(t){
@@ -423,6 +459,24 @@ function applyOpenState(){
     sec.classList.toggle("open", isOpen);
     caret.textContent = isOpen ? "▾" : "▸";
   });
+}
+
+function cleanId(s){
+  return String(s || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/\s+/g,"-")
+    .replace(/[^a-zA-Z0-9-_]/g,"");
+}
+
+function toggleCategoria(id){
+  openCategories[id] = !openCategories[id];
+  saveOpenCategories();
+
+  const body = document.getElementById("cat-body-" + id);
+  const caret = document.getElementById("cat-caret-" + id);
+
+  if(body) body.style.display = openCategories[id] ? "block" : "none";
+  if(caret) caret.textContent = openCategories[id] ? "▾" : "▸";
 }
 
 function localDateText(){
@@ -653,21 +707,45 @@ function render(){
       wrapper.className = "category-group";
 
       if(grupo.categoria !== "__sin_categoria__"){
+        const catId = cleanId(tiempo + "-" + grupo.categoria);
+
+        if(openCategories[catId] === undefined){
+          openCategories[catId] = true;
+        }
+
         const header = document.createElement("div");
         header.className = "category-header";
+        header.onclick = () => toggleCategoria(catId);
         header.innerHTML = `
-          <span class="category-icon">${getCategoriaIcon(grupo.categoria)}</span>
-          <span>${escapeHtml(getCategoriaLabel(grupo.categoria))}</span>
+          <div class="category-title">
+            <span class="category-caret" id="cat-caret-${catId}">${openCategories[catId] ? "▾" : "▸"}</span>
+            <span class="category-icon">${getCategoriaIcon(grupo.categoria)}</span>
+            <span>${escapeHtml(getCategoriaLabel(grupo.categoria))}</span>
+          </div>
+          <span class="category-count">${grupo.items.length}</span>
         `;
         wrapper.appendChild(header);
-      }
 
-      grupo.items.forEach(it=>{
-        wrapper.appendChild(renderItem(it));
-      });
+        const body = document.createElement("div");
+        body.className = "category-body";
+        body.id = "cat-body-" + catId;
+        body.style.display = openCategories[catId] ? "block" : "none";
+
+        grupo.items.forEach(it=>{
+          body.appendChild(renderItem(it));
+        });
+
+        wrapper.appendChild(body);
+      }else{
+        grupo.items.forEach(it=>{
+          wrapper.appendChild(renderItem(it));
+        });
+      }
 
       cont.appendChild(wrapper);
     });
+
+    saveOpenCategories();
   });
 
   applyOpenState();
