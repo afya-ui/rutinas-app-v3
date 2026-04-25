@@ -187,6 +187,32 @@ exports.handler = async (event) => {
       };
     }
 
+    if (action === "getHistorial") {
+      const { categoria, tiempo, nombre } = data || {};
+      const rows = await readSheet(sheets, "checks!A2:E");
+
+      const historial = [];
+
+      for (const row of rows) {
+        const [fecha, c, t, n, completado] = row;
+
+        if (c === categoria && t === tiempo && n === nombre) {
+          historial.push({
+            fecha,
+            completado: completado === "true"
+          });
+        }
+      }
+
+      historial.sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ historial }),
+      };
+    }
+
     if (action === "saveCheck") {
       const { fecha, categoria, tiempo, nombre, completado } = data;
 
