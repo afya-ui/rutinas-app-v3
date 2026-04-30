@@ -655,6 +655,9 @@ h1{
   line-height:1.4;
 }
 
+
+.single-stat{grid-template-columns:1fr !important;}
+.ritmo-only-card{text-align:left;}
 </style>
 </head>
 
@@ -1464,16 +1467,8 @@ function abrirDetalleCategoriaRitmo(categoria){
 
   const showSoft = pct < 10 || usados <= 0;
   let html = `
-    <div class="history-stats">
-      <div class="stat-card">
-        <div class="stat-value">${usados}</div>
-        <div class="stat-label">Usos</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">${showSoft ? productos.length : pendientes}</div>
-        <div class="stat-label">${showSoft ? "Acciones" : "Por completar"}</div>
-      </div>
-      <div class="stat-card">
+    <div class="history-stats single-stat">
+      <div class="stat-card ritmo-only-card">
         <div class="stat-value">${pct}%</div>
         <div class="stat-label">Ritmo</div>
       </div>
@@ -1490,7 +1485,7 @@ function abrirDetalleCategoriaRitmo(categoria){
     `;
   }
 
-  html += `<div class="ritmo-card"><div class="ritmo-card-title">Productos y acciones</div>`;
+  html += `<div class="ritmo-card"><div class="ritmo-card-title">Productos</div>`;
 
   if(!productos.length){
     html += `<div class="ritmo-empty">No hay productos o acciones en esta categoría durante este periodo.</div>`;
@@ -1560,7 +1555,7 @@ function renderRitmoReport(cont){
 
     <div class="ritmo-card">
       <div class="ritmo-card-title">Por categoría · ${escapeHtml(periodLabel)}</div>
-      <div class="note" style="margin-bottom:6px;">Toca una categoría para ver sus productos y acciones.</div>
+      <div class="note" style="margin-bottom:6px;">Toca una categoría para ver sus productos.</div>
       ${cats.length ? cats.map(c=>`
         <div class="ritmo-row clickable" onclick="abrirDetalleCategoriaRitmo('${escapeAttr(c.categoria)}')">
           <div class="ritmo-row-left"><span class="ritmo-dot ${pctClass(c.pct || 0)}"></span>${escapeHtml(c.label || c.categoria)}</div>
@@ -1592,7 +1587,7 @@ function renderRitmoReport(cont){
       <div class="ritmo-card-title">Producto a reforzar</div>
       ${r.peorProducto ? `
         <div class="ritmo-insight">
-          ${escapeHtml(r.peorProducto.nombre)} es el que más oportunidades tiene: ${r.peorProducto.fallas} pendiente${r.peorProducto.fallas === 1 ? "" : "s"} en este periodo.
+          ${escapeHtml(r.peorProducto.nombre)} es el producto que más conviene reforzar en este periodo.
         </div>
       ` : `<div class="ritmo-empty">Todavía no hay suficiente información para detectar un producto a reforzar.</div>`}
     </div>
@@ -1651,10 +1646,10 @@ function render(){
     const pct = r && r.esperados ? Number(r.pct || 0) : 0;
     document.getElementById("summary-title").textContent = "Mi ritmo";
     document.getElementById("pct").textContent = r && r.esperados ? pct + "%" : "—";
-    document.getElementById("ritmo-msg").textContent = r && r.esperados ? getRitmoMensaje(pct) : "Vas creando tu ritmo. Registra algunas acciones para empezar a ver tu avance.";
+    document.getElementById("ritmo-msg").textContent = r && r.esperados ? getRitmoMensaje(pct) : "Vas creando tu ritmo. Registra tu rutina para empezar a ver tu avance.";
     document.getElementById("fill").style.width = r && r.esperados ? pct + "%" : "0%";
-    document.getElementById("done-count").textContent = r && r.esperados ? `${r.usados}/${r.esperados} acciones` : "Sin datos";
-    document.getElementById("pending-count").textContent = r && r.esperados ? `${r.pendientes} por reforzar` : "";
+    document.getElementById("done-count").textContent = "";
+    document.getElementById("pending-count").textContent = "";
     if(note) note.textContent = "";
     renderRitmoReport(cont);
     return;
