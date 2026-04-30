@@ -783,6 +783,7 @@ function getCheck(categoria, tiempo, nombre){
   return !!(checksObj &&
     checksObj[categoria] &&
     checksObj[categoria][tiempo] &&
+    checksObj[categoria][tiempo][nombre]);
 }
 
 function escapeAttr(s){
