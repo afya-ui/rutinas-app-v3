@@ -571,11 +571,7 @@ function currentTimeSection(){
 }
 
 function initOpenSections(){
-  const savedCats = localStorage.getItem("openCategoriesV3");
-if(savedCats){
-  try{
-    openCategories = JSON.parse(savedCats);
-  }catch(e){
+  
     openCategories = {};
     }
   }
