@@ -16,67 +16,36 @@ async function getSheets() {
 }
 
 async function readSheet(sheets, range) {
-  const res = await sheets.spreadsheets.values.get({ spreadsheetId: SHEET_ID, range });
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range,
+  });
   return res.data.values || [];
 }
 
-async function readSheetSafe(sheets, range) {
-  try {
-    return await readSheet(sheets, range);
-  } catch (err) {
-    return [];
-  }
-}
-
-async function updateRow(sheets, range, values) {
-  await sheets.spreadsheets.values.update({
-    spreadsheetId: SHEET_ID,
-    range,
-    valueInputOption: "RAW",
-    requestBody: { values: [values] },
-  });
-}
-
-async function appendRow(sheets, range, values) {
-  await sheets.spreadsheets.values.append({
-    spreadsheetId: SHEET_ID,
-    range,
-    valueInputOption: "RAW",
-    insertDataOption: "INSERT_ROWS",
-    requestBody: { values: [values] },
-  });
-}
-
-async function ensureSheet(sheets, title, header) {
-  const meta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
-  const exists = (meta.data.sheets || []).some(s => s.properties && s.properties.title === title);
-
-  if (!exists) {
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: SHEET_ID,
-      requestBody: { requests: [{ addSheet: { properties: { title } } }] },
-    });
-  }
-
-  const currentHeader = await readSheetSafe(sheets, `${title}!A1:Z1`);
-  if (!currentHeader.length || !currentHeader[0].length) {
-    await updateRow(sheets, `${title}!A1:${String.fromCharCode(64 + header.length)}1`, header);
-  }
-}
-
 function normalize(v) {
+  return String(v || "").toLowerCase().trim();
+}
+
+function normalizeKey(v) {
   return String(v || "")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
 }
 
-function same(a, b) {
-  return normalize(a) === normalize(b);
+function sameKey(a, b) {
+  return normalizeKey(a) === normalizeKey(b);
 }
 
 function cleanList(v) {
   return normalize(v)
+    .replace(/á/g, "a")
+    .replace(/é/g, "e")
+    .replace(/í/g, "i")
+    .replace(/ó/g, "o")
+    .replace(/ú/g, "u")
     .split(",")
     .map(x => x.trim())
     .filter(Boolean);
@@ -84,14 +53,42 @@ function cleanList(v) {
 
 function mapCategoria(c) {
   c = normalize(c);
+
   if (c.includes("derma")) return "dermato";
   if (c.includes("suplement")) return "suplementos";
   if (c.includes("ejercicio")) return "ejercicio";
   if (c.includes("bienestar")) return "bienestar";
-  if (c.includes("sueno") || c.includes("sue")) return "sueno";
+  if (c.includes("sue")) return "sueno";
   if (c.includes("wellness")) return "wellness";
-  return c || "wellness";
+
+  return "wellness";
 }
+
+const CAT_LABEL = {
+  dermato: "Derma",
+  derma: "Derma",
+  suplementos: "Suplementos",
+  suplemento: "Suplementos",
+  ejercicio: "Ejercicio",
+  bienestar: "Bienestar",
+  sueno: "Sueño",
+  sueño: "Sueño",
+  wellness: "Wellness",
+};
+
+const TIME_LABEL = {
+  manana: "Mañana",
+  tarde: "Tarde",
+  noche: "Noche",
+};
+
+const DAYS_ES = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
+
+const WELLNESS_ITEMS = [
+  { nombre: "Meditación" },
+  { nombre: "Sauna" },
+  { nombre: "Hielos" },
+];
 
 function frecuenciaToTiempos(frecuencia) {
   let f = normalize(frecuencia)
@@ -104,19 +101,23 @@ function frecuenciaToTiempos(frecuencia) {
   if (f === "8h" || f === "8") return ["manana", "tarde", "noche"];
   if (f === "12h" || f === "12") return ["manana", "noche"];
   if (f === "24h" || f === "24") return ["manana"];
+
   return ["manana"];
 }
 
 function horarioToTiempos(horario, frecuencia) {
   const h = cleanList(horario);
+
   if (h.length > 0) {
     return h.map(x => {
-      if (x === "mañana" || x === "manana") return "manana";
+      if (x === "mañana") return "manana";
+      if (x === "manana") return "manana";
       if (x === "tarde") return "tarde";
       if (x === "noche") return "noche";
       return x;
     }).filter(x => ["manana", "tarde", "noche"].includes(x));
   }
+
   return frecuenciaToTiempos(frecuencia);
 }
 
@@ -124,13 +125,26 @@ function buildPlan(rows) {
   const plan = {};
 
   for (const row of rows) {
-    const [nombre, categoria, frecuencia, horario, dias, inicio, duracion, nota, activo] = row;
+    const [
+      nombre,
+      categoria,
+      frecuencia,
+      horario,
+      dias,
+      inicio,
+      duracion,
+      nota,
+      activo
+    ] = row;
+
     if (!nombre) continue;
     if (["no", "false", "0", "inactivo"].includes(normalize(activo))) continue;
 
     const cat = mapCategoria(categoria);
     const tiempos = horarioToTiempos(horario, frecuencia);
-    const diasFinal = dias && normalize(dias) !== "todos" ? cleanList(dias) : "todos";
+    const diasFinal = dias && normalize(dias) !== "todos"
+      ? cleanList(dias)
+      : "todos";
 
     if (!plan[cat]) plan[cat] = { manana: {}, tarde: {}, noche: {} };
 
@@ -148,9 +162,314 @@ function buildPlan(rows) {
   return plan;
 }
 
-function rowToCheck(row) {
-  const [fecha, categoria, tiempo, nombre, completado] = row;
-  return { fecha, categoria, tiempo, nombre, completado: String(completado) === "true" };
+function buildPlanItems(rows) {
+  const items = [];
+
+  for (const row of rows) {
+    const [
+      nombre,
+      categoria,
+      frecuencia,
+      horario,
+      dias,
+      inicio,
+      duracion,
+      nota,
+      activo
+    ] = row;
+
+    if (!nombre) continue;
+    if (["no", "false", "0", "inactivo"].includes(normalize(activo))) continue;
+
+    const cat = mapCategoria(categoria);
+    const tiempos = horarioToTiempos(horario, frecuencia);
+    const diasFinal = dias && normalize(dias) !== "todos"
+      ? cleanList(dias)
+      : "todos";
+
+    for (const tiempo of tiempos) {
+      items.push({
+        categoria: cat,
+        categoriaLabel: CAT_LABEL[cat] || cat,
+        tiempo,
+        nombre,
+        days: diasFinal,
+        inicio: inicio || null,
+        diasCiclo: duracion ? Number(duracion) : null,
+      });
+    }
+  }
+
+  // Estos son los items fijos que la app muestra dentro de Wellness.
+  for (const tiempo of ["manana", "tarde", "noche"]) {
+    for (const w of WELLNESS_ITEMS) {
+      items.push({
+        categoria: "wellness",
+        categoriaLabel: "Wellness",
+        tiempo,
+        nombre: w.nombre,
+        days: "todos",
+        inicio: null,
+        diasCiclo: null,
+        wellnessFijo: true,
+      });
+    }
+  }
+
+  return items;
+}
+
+function parseDateKey(value) {
+  if (!value) return "";
+  const s = String(value).trim();
+
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${String(m[2]).padStart(2,"0")}-${String(m[3]).padStart(2,"0")}`;
+
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (m) return `${m[3]}-${String(m[2]).padStart(2,"0")}-${String(m[1]).padStart(2,"0")}`;
+
+  return s;
+}
+
+function dateFromKey(key) {
+  return new Date(key + "T12:00:00");
+}
+
+function keyFromDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function addDaysKey(key, days) {
+  const d = dateFromKey(key);
+  d.setDate(d.getDate() + days);
+  return keyFromDate(d);
+}
+
+function daysBetween(aKey, bKey) {
+  return Math.round((dateFromKey(bKey) - dateFromKey(aKey)) / 86400000);
+}
+
+function getPeriodRange(periodo) {
+  const now = new Date();
+  const today = keyFromDate(now);
+
+  if (periodo === "7d") {
+    return {
+      start: addDaysKey(today, -6),
+      end: today,
+      label: "Últimos 7 días",
+    };
+  }
+
+  if (periodo === "mes_anterior") {
+    const firstThisMonth = new Date(now.getFullYear(), now.getMonth(), 1, 12);
+    const lastPrevMonth = new Date(firstThisMonth);
+    lastPrevMonth.setDate(0);
+    const firstPrevMonth = new Date(lastPrevMonth.getFullYear(), lastPrevMonth.getMonth(), 1, 12);
+
+    return {
+      start: keyFromDate(firstPrevMonth),
+      end: keyFromDate(lastPrevMonth),
+      label: "Mes anterior",
+    };
+  }
+
+  const firstThisMonth = new Date(now.getFullYear(), now.getMonth(), 1, 12);
+  return {
+    start: keyFromDate(firstThisMonth),
+    end: today,
+    label: "Este mes",
+  };
+}
+
+function dayOk(item, fechaKey) {
+  const dias = item.days || "todos";
+  if (dias === "todos") return true;
+
+  const dow = DAYS_ES[dateFromKey(fechaKey).getDay()];
+  if (Array.isArray(dias)) return dias.includes(dow);
+
+  return String(dias)
+    .split(",")
+    .map(x => normalizeKey(x))
+    .includes(normalizeKey(dow));
+}
+
+function itemExpectedOnDate(item, fechaKey) {
+  if (!dayOk(item, fechaKey)) return false;
+
+  if (item.inicio) {
+    const inicio = parseDateKey(item.inicio);
+    if (fechaKey < inicio) return false;
+
+    if (item.diasCiclo) {
+      const diff = daysBetween(inicio, fechaKey);
+      if (diff < 0 || diff >= Number(item.diasCiclo)) return false;
+    }
+  }
+
+  return true;
+}
+
+function calcExpected(item, start, end) {
+  let expected = 0;
+  let cursor = start;
+
+  while (cursor <= end) {
+    if (itemExpectedOnDate(item, cursor)) expected++;
+    cursor = addDaysKey(cursor, 1);
+  }
+
+  return expected;
+}
+
+function checkCompletedValue(v) {
+  const s = normalizeKey(v);
+  return ["true", "si", "yes", "1", "x", "ok", "aplicado", "completado", "done"].includes(s);
+}
+
+function checkKey(categoria, tiempo, nombre) {
+  return `${normalizeKey(categoria)}||${normalizeKey(tiempo)}||${normalizeKey(nombre)}`;
+}
+
+function buildInsight(pct, fuerte, debil, horarioDebil) {
+  if (pct >= 80) {
+    return `Vas creando una base sólida. Tu punto más fuerte es ${fuerte || "tu constancia"} y puedes cuidar ${debil || "los detalles"} para mantener el ritmo.`;
+  }
+  if (pct >= 50) {
+    return `Ya hay avance. Refuerza ${debil || "lo más irregular"}${horarioDebil ? `, especialmente en ${horarioDebil.toLowerCase()}` : ""}, para acercarte a resultados más claros.`;
+  }
+  return `Estás empezando. Enfócate en recuperar ritmo con pocas acciones clave y vuelve a aparecer hoy.`;
+}
+
+function buildRitmoReport(planRows, checkRows, periodo) {
+  const { start, end, label } = getPeriodRange(periodo);
+  const items = buildPlanItems(planRows);
+
+  const byKey = {};
+  for (const item of items) {
+    const key = checkKey(item.categoria, item.tiempo, item.nombre);
+    if (!byKey[key]) {
+      byKey[key] = {
+        ...item,
+        esperados: 0,
+        usados: 0,
+      };
+    }
+    byKey[key].esperados += calcExpected(item, start, end);
+  }
+
+  for (const row of checkRows) {
+    const [fechaRaw, categoria, tiempo, nombre, completado] = row;
+    const fecha = parseDateKey(fechaRaw);
+    if (!fecha || fecha < start || fecha > end) continue;
+    if (!checkCompletedValue(completado)) continue;
+
+    const key = checkKey(categoria, tiempo, nombre);
+    if (!byKey[key]) {
+      const cat = mapCategoria(categoria);
+      byKey[key] = {
+        categoria: cat,
+        categoriaLabel: CAT_LABEL[cat] || cat,
+        tiempo,
+        nombre,
+        esperados: 0,
+        usados: 0,
+      };
+    }
+
+    byKey[key].usados += 1;
+  }
+
+  const productos = Object.values(byKey)
+    .filter(x => x.esperados > 0 || x.usados > 0)
+    .map(x => {
+      const pct = x.esperados ? Math.min(100, Math.round((x.usados / x.esperados) * 100)) : null;
+      return {
+        categoria: x.categoria,
+        categoriaLabel: x.categoriaLabel || CAT_LABEL[x.categoria] || x.categoria,
+        tiempo: x.tiempo,
+        nombre: x.nombre,
+        esperados: x.esperados,
+        usados: x.usados,
+        pct,
+      };
+    })
+    .sort((a, b) => {
+      const aScore = a.esperados ? a.pct : 101;
+      const bScore = b.esperados ? b.pct : 101;
+      if (aScore !== bScore) return aScore - bScore;
+      return String(a.nombre).localeCompare(String(b.nombre));
+    });
+
+  const totalEsperados = productos.reduce((sum, p) => sum + Number(p.esperados || 0), 0);
+  const totalUsados = productos.reduce((sum, p) => sum + Number(p.usados || 0), 0);
+  const pct = totalEsperados ? Math.min(100, Math.round((totalUsados / totalEsperados) * 100)) : 0;
+
+  const catMap = {};
+  const timeMap = {};
+
+  for (const p of productos) {
+    if (!catMap[p.categoria]) {
+      catMap[p.categoria] = {
+        categoria: p.categoria,
+        label: p.categoriaLabel || CAT_LABEL[p.categoria] || p.categoria,
+        esperados: 0,
+        usados: 0,
+      };
+    }
+    catMap[p.categoria].esperados += Number(p.esperados || 0);
+    catMap[p.categoria].usados += Number(p.usados || 0);
+
+    if (!timeMap[p.tiempo]) {
+      timeMap[p.tiempo] = {
+        tiempo: p.tiempo,
+        label: TIME_LABEL[p.tiempo] || p.tiempo,
+        esperados: 0,
+        usados: 0,
+      };
+    }
+    timeMap[p.tiempo].esperados += Number(p.esperados || 0);
+    timeMap[p.tiempo].usados += Number(p.usados || 0);
+  }
+
+  const categorias = Object.values(catMap).map(c => ({
+    ...c,
+    pct: c.esperados ? Math.min(100, Math.round((c.usados / c.esperados) * 100)) : 0,
+  })).sort((a,b)=> b.pct - a.pct);
+
+  const horarios = Object.values(timeMap).map(t => ({
+    ...t,
+    pct: t.esperados ? Math.min(100, Math.round((t.usados / t.esperados) * 100)) : 0,
+  })).sort((a,b)=> b.pct - a.pct);
+
+  const fuerte = categorias.length ? categorias[0].label : "";
+  const debil = categorias.length ? categorias[categorias.length - 1].label : "";
+  const mejorHorario = horarios.length ? horarios[0].label : "";
+  const horarioDebil = horarios.length ? horarios[horarios.length - 1].label : "";
+
+  return {
+    periodo: periodo || "mes",
+    periodoLabel: label,
+    start,
+    end,
+    esperados: totalEsperados,
+    usados: totalUsados,
+    pendientes: Math.max(0, totalEsperados - totalUsados),
+    pct,
+    fuerte,
+    debil,
+    mejorHorario,
+    horarioDebil,
+    insight: buildInsight(pct, fuerte, debil, horarioDebil),
+    categorias,
+    horarios,
+    productos,
+  };
 }
 
 exports.handler = async (event) => {
@@ -160,7 +479,9 @@ exports.handler = async (event) => {
     "Content-Type": "application/json",
   };
 
-  if (event.httpMethod === "OPTIONS") return { statusCode: 200, headers, body: "" };
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 200, headers, body: "" };
+  }
 
   try {
     const sheets = await getSheets();
@@ -168,108 +489,159 @@ exports.handler = async (event) => {
 
     if (action === "getPlan") {
       const rows = await readSheet(sheets, "plan!A2:I");
-      return { statusCode: 200, headers, body: JSON.stringify({ plan: buildPlan(rows) }) };
+      const plan = buildPlan(rows);
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ plan }),
+      };
     }
 
     if (action === "getChecks") {
       const { fecha } = data || {};
-      const rows = await readSheetSafe(sheets, "checks!A2:E");
+      const rows = await readSheet(sheets, "checks!A2:E");
       const checks = {};
 
       for (const row of rows) {
         const [f, categoria, tiempo, nombre, completado] = row;
         if (fecha && f !== fecha) continue;
+
         if (!checks[categoria]) checks[categoria] = {};
         if (!checks[categoria][tiempo]) checks[categoria][tiempo] = {};
-        checks[categoria][tiempo][nombre] = String(completado) === "true";
+
+        checks[categoria][tiempo][nombre] = checkCompletedValue(completado);
       }
 
-      return { statusCode: 200, headers, body: JSON.stringify({ checks }) };
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ checks }),
+      };
     }
 
-    if (action === "getAllChecks") {
-      const rows = await readSheetSafe(sheets, "checks!A2:E");
-      const checks = rows.filter(r => r[0]).map(rowToCheck);
-      return { statusCode: 200, headers, body: JSON.stringify({ checks }) };
+    if (action === "getRitmoReport") {
+      const { periodo } = data || {};
+      const [planRows, checkRows] = await Promise.all([
+        readSheet(sheets, "plan!A2:I"),
+        readSheet(sheets, "checks!A2:E"),
+      ]);
+
+      const report = buildRitmoReport(planRows, checkRows, periodo || "mes");
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ report }),
+      };
+    }
+
+    if (action === "getUsageCounts") {
+      const rows = await readSheet(sheets, "checks!A2:E");
+      const usageCounts = {};
+
+      for (const row of rows) {
+        const [fecha, categoria, tiempo, nombre, completado] = row;
+        if (!fecha || !categoria || !tiempo || !nombre) continue;
+        if (!checkCompletedValue(completado)) continue;
+
+        const key = checkKey(categoria, tiempo, nombre);
+        usageCounts[key] = (usageCounts[key] || 0) + 1;
+      }
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ usageCounts }),
+      };
     }
 
     if (action === "getHistorial") {
       const { categoria, tiempo, nombre } = data || {};
-      const rows = await readSheetSafe(sheets, "checks!A2:E");
+      const rows = await readSheet(sheets, "checks!A2:E");
+
       const historial = [];
 
       for (const row of rows) {
         const [fecha, c, t, n, completado] = row;
-        if (same(c, categoria) && same(t, tiempo) && same(n, nombre)) {
-          historial.push({ fecha, completado: String(completado) === "true" });
+
+        if (sameKey(c, categoria) && sameKey(t, tiempo) && sameKey(n, nombre)) {
+          historial.push({
+            fecha: parseDateKey(fecha),
+            completado: checkCompletedValue(completado)
+          });
         }
       }
 
-      historial.sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
-      return { statusCode: 200, headers, body: JSON.stringify({ historial }) };
+      historial.sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || "")));
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ historial }),
+      };
     }
 
     if (action === "saveCheck") {
-      const { fecha, categoria, tiempo, nombre, completado } = data || {};
-      if (!fecha || !categoria || !tiempo || !nombre) throw new Error("Faltan datos para guardar el check");
+      const { fecha, categoria, tiempo, nombre, completado } = data;
 
-      await ensureSheet(sheets, "checks", ["fecha", "categoria", "tiempo", "nombre", "completado"]);
-      const rows = await readSheetSafe(sheets, "checks!A2:E");
-      let foundIndex = -1;
+      if (!fecha || !categoria || !tiempo || !nombre) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: "Faltan datos para guardar el check" }),
+        };
+      }
+
+      const rows = await readSheet(sheets, "checks!A2:E");
+      let rowNumberToUpdate = null;
 
       for (let i = 0; i < rows.length; i++) {
         const [f, c, t, n] = rows[i];
-        if (String(f) === String(fecha) && same(c, categoria) && same(t, tiempo) && same(n, nombre)) {
-          foundIndex = i;
+
+        if (parseDateKey(f) === parseDateKey(fecha) && sameKey(c, categoria) && sameKey(t, tiempo) && sameKey(n, nombre)) {
+          rowNumberToUpdate = i + 2; // A2:E empieza en la fila 2
           break;
         }
       }
 
-      const values = [fecha, categoria, tiempo, nombre, String(!!completado)];
-      if (foundIndex >= 0) {
-        const sheetRow = foundIndex + 2;
-        await updateRow(sheets, `checks!A${sheetRow}:E${sheetRow}`, values);
+      const values = [[parseDateKey(fecha), categoria, tiempo, nombre, String(!!completado)]];
+
+      if (rowNumberToUpdate) {
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SHEET_ID,
+          range: `checks!A${rowNumberToUpdate}:E${rowNumberToUpdate}`,
+          valueInputOption: "RAW",
+          requestBody: { values },
+        });
       } else {
-        await appendRow(sheets, "checks!A:E", values);
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: SHEET_ID,
+          range: "checks!A:E",
+          valueInputOption: "RAW",
+          insertDataOption: "INSERT_ROWS",
+          requestBody: { values },
+        });
       }
 
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ ok: true }),
+      };
     }
 
-    if (action === "getEvoluciones") {
-      const rows = await readSheetSafe(sheets, "evolucion!A2:H");
-      const evoluciones = rows.filter(r => r[0] || r[1] || r[2]).map(r => ({
-        fecha_inicio: r[0] || "",
-        fecha_fin: r[1] || "",
-        categoria: r[2] || "",
-        foto_inicio_url: r[3] || "",
-        foto_fin_url: r[4] || "",
-        score: r[5] || "",
-        nota: r[6] || "",
-        creado: r[7] || "",
-      }));
-      evoluciones.sort((a, b) => String(b.fecha_fin || b.fecha_inicio).localeCompare(String(a.fecha_fin || a.fecha_inicio)));
-      return { statusCode: 200, headers, body: JSON.stringify({ evoluciones }) };
-    }
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({ error: "Acción no válida" }),
+    };
 
-    if (action === "saveEvolucion") {
-      const d = data || {};
-      await ensureSheet(sheets, "evolucion", ["fecha_inicio", "fecha_fin", "categoria", "foto_inicio_url", "foto_fin_url", "score", "nota", "creado"]);
-      await appendRow(sheets, "evolucion!A:H", [
-        d.fecha_inicio || "",
-        d.fecha_fin || "",
-        d.categoria || "",
-        d.foto_inicio_url || "",
-        d.foto_fin_url || "",
-        d.score || "",
-        d.nota || "",
-        new Date().toISOString(),
-      ]);
-      return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
-    }
-
-    return { statusCode: 400, headers, body: JSON.stringify({ error: "Acción no válida" }) };
   } catch (err) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: err.message }),
+    };
   }
 };
