@@ -596,6 +596,59 @@ h1{
   background:rgba(255,255,255,.45);
   text-align:center;
 }
+
+.product-group{
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:13px;
+  background:#fff;
+  margin-bottom:10px;
+}
+.product-group-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  cursor:pointer;
+}
+.product-group-title{
+  font-size:16px;
+  font-weight:850;
+}
+.product-group-status{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:13px;
+}
+.product-group-value{
+  font-weight:900;
+  white-space:nowrap;
+}
+.product-hours{
+  display:none;
+  margin-top:10px;
+  border-top:1px solid rgba(0,0,0,.07);
+  padding-top:8px;
+}
+.product-group.open .product-hours{display:block;}
+.hour-row{
+  display:flex;
+  justify-content:space-between;
+  padding:8px 0;
+  color:var(--muted);
+  font-size:13px;
+}
+.hour-row strong{color:var(--text);}
+.soft-status{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:12px;
+  font-weight:750;
+  line-height:1.35;
+}
+
 .note{
   color:var(--muted);
   font-size:13px;
@@ -1325,23 +1378,75 @@ function pctClass(pct){
 }
 
 
+function ritmoCategoriaTexto(pct, usados){
+  if(usados <= 0) return "Aún no hay actividad en este periodo. Empieza con una acción hoy.";
+  if(pct >= 80) return "Traes muy buen ritmo en esta categoría. Sigue sosteniéndolo.";
+  if(pct >= 50) return "Vas agarrando ritmo en esta categoría. Un poco más de constancia puede hacer mucha diferencia.";
+  return "Ya empezaste a moverte en esta categoría. El siguiente paso es repetirlo con más frecuencia.";
+}
+
+function resumenProductoTexto(usados, esperados, pct){
+  if(!esperados) return `${usados} uso${usados === 1 ? "" : "s"}`;
+  if(usados <= 0) return "Sin registros todavía";
+  if(pct >= 80) return "Muy buen ritmo";
+  if(pct >= 50) return "Vas agarrando ritmo";
+  return "En construcción";
+}
+
+function toggleProductGroup(id){
+  const el = document.getElementById(id);
+  if(el) el.classList.toggle("open");
+}
+
+function agruparProductosPorNombre(productos){
+  const map = {};
+
+  productos.forEach(p=>{
+    const key = String(p.nombre || "").trim();
+    if(!map[key]){
+      map[key] = {
+        nombre:p.nombre,
+        categoria:p.categoria,
+        usados:0,
+        esperados:0,
+        horarios:[]
+      };
+    }
+
+    const usados = Number(p.usados || 0);
+    const esperados = Number(p.esperados || 0);
+    map[key].usados += usados;
+    map[key].esperados += esperados;
+    map[key].horarios.push({
+      tiempo:p.tiempo,
+      usados,
+      esperados,
+      pct:p.pct,
+      nombre:p.nombre,
+      categoria:p.categoria
+    });
+  });
+
+  return Object.values(map).map(g=>{
+    g.pendientes = Math.max(0, g.esperados - g.usados);
+    g.pct = g.esperados ? Math.min(100, Math.round(g.usados / g.esperados * 100)) : null;
+    return g;
+  }).sort((a,b)=>{
+    if(b.pendientes !== a.pendientes) return b.pendientes - a.pendientes;
+    const ap = a.pct === null || a.pct === undefined ? 101 : a.pct;
+    const bp = b.pct === null || b.pct === undefined ? 101 : b.pct;
+    if(ap !== bp) return ap - bp;
+    return String(a.nombre).localeCompare(String(b.nombre));
+  });
+}
+
 function abrirDetalleCategoriaRitmo(categoria){
   if(!ritmoReport) return;
 
   const cat = (ritmoReport.categorias || []).find(c => c.categoria === categoria) || null;
   const label = cat ? cat.label : getCategoriaLabel(categoria);
-  const productos = (ritmoReport.productos || [])
-    .filter(p => p.categoria === categoria)
-    .slice()
-    .sort((a,b)=>{
-      const af = Math.max(0, Number(a.esperados || 0) - Number(a.usados || 0));
-      const bf = Math.max(0, Number(b.esperados || 0) - Number(b.usados || 0));
-      if(bf !== af) return bf - af;
-      const ap = a.pct === null || a.pct === undefined ? 101 : a.pct;
-      const bp = b.pct === null || b.pct === undefined ? 101 : b.pct;
-      if(ap !== bp) return ap - bp;
-      return String(a.nombre).localeCompare(String(b.nombre));
-    });
+  const productosBase = (ritmoReport.productos || []).filter(p => p.categoria === categoria);
+  const productos = agruparProductosPorNombre(productosBase);
 
   const esperados = productos.reduce((s,p)=> s + Number(p.esperados || 0), 0);
   const usados = productos.reduce((s,p)=> s + Number(p.usados || 0), 0);
@@ -1350,36 +1455,37 @@ function abrirDetalleCategoriaRitmo(categoria){
 
   const peor = productos
     .filter(p => Number(p.esperados || 0) > 0)
-    .map(p => ({...p, fallas: Math.max(0, Number(p.esperados || 0) - Number(p.usados || 0))}))
-    .filter(p => p.fallas > 0)
-    .sort((a,b)=> b.fallas - a.fallas || (a.pct || 0) - (b.pct || 0))[0] || null;
+    .filter(p => p.pendientes > 0)
+    .sort((a,b)=> b.pendientes - a.pendientes || (a.pct || 0) - (b.pct || 0))[0] || null;
 
   document.getElementById("modal-title").textContent = label;
   document.getElementById("modal-subtitle").textContent = `Detalle de ${ritmoReport.periodoLabel || "este periodo"}`;
   document.getElementById("history-modal").style.display = "flex";
 
+  const showSoft = pct < 10 || usados <= 0;
   let html = `
     <div class="history-stats">
       <div class="stat-card">
         <div class="stat-value">${usados}</div>
-        <div class="stat-label">Usados</div>
+        <div class="stat-label">Usos</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${pendientes}</div>
-        <div class="stat-label">A reforzar</div>
+        <div class="stat-value">${showSoft ? productos.length : pendientes}</div>
+        <div class="stat-label">${showSoft ? "Acciones" : "Por completar"}</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">${pct}%</div>
         <div class="stat-label">Ritmo</div>
       </div>
     </div>
+    <div class="soft-status">${escapeHtml(ritmoCategoriaTexto(pct, usados))}</div>
   `;
 
-  if(peor){
+  if(peor && !showSoft){
     html += `
       <div class="ritmo-card">
         <div class="ritmo-card-title">Producto a reforzar</div>
-        <div class="ritmo-insight">${escapeHtml(peor.nombre)} tiene ${peor.fallas} pendiente${peor.fallas === 1 ? "" : "s"} en este periodo.</div>
+        <div class="ritmo-insight">${escapeHtml(peor.nombre)} es el principal punto a reforzar en este periodo.</div>
       </div>
     `;
   }
@@ -1389,18 +1495,27 @@ function abrirDetalleCategoriaRitmo(categoria){
   if(!productos.length){
     html += `<div class="ritmo-empty">No hay productos o acciones en esta categoría durante este periodo.</div>`;
   }else{
-    productos.forEach(p=>{
-      const fallas = Math.max(0, Number(p.esperados || 0) - Number(p.usados || 0));
+    productos.forEach((p, idx)=>{
+      const groupId = `prod-group-${cleanId(categoria)}-${idx}`;
       const pctText = p.pct !== null && p.pct !== undefined ? `${p.pct}%` : `${p.usados} uso${p.usados === 1 ? "" : "s"}`;
-      const ratio = p.esperados ? `${p.usados}/${p.esperados}` : `${p.usados}`;
+      const valueText = p.esperados && p.usados > 0 ? `${p.usados}/${p.esperados}` : pctText;
+      const statusText = resumenProductoTexto(p.usados, p.esperados, p.pct || 0);
+
       html += `
-        <div class="product-summary-row" onclick="abrirHistorial('${escapeAttr(p.categoria)}','${escapeAttr(p.tiempo)}','${escapeAttr(p.nombre)}')">
-          <div class="product-summary-top">
-            <span>${escapeHtml(p.nombre)}</span>
-            <span>${ratio}</span>
+        <div class="product-group" id="${groupId}">
+          <div class="product-group-head" onclick="toggleProductGroup('${groupId}')">
+            <div>
+              <div class="product-group-title">${escapeHtml(p.nombre)}</div>
+              <div class="product-group-status">${escapeHtml(statusText)}${p.esperados && p.usados > 0 ? ` · ${p.pct}%` : ""}</div>
+            </div>
+            <div class="product-group-value">${valueText} ▾</div>
           </div>
-          <div class="product-summary-meta">
-            ${escapeHtml(TIME_LABEL[p.tiempo] || p.tiempo)} · ${pctText}${p.esperados ? ` · ${fallas} pendiente${fallas === 1 ? "" : "s"}` : ""}
+          <div class="product-hours">
+            ${p.horarios.map(h=>{
+              const hPct = h.esperados ? Math.round((h.usados / h.esperados) * 100) : null;
+              const hText = h.esperados && h.usados > 0 ? `${h.usados}/${h.esperados} · ${hPct}%` : (h.usados > 0 ? `${h.usados} uso${h.usados === 1 ? "" : "s"}` : "Sin registro");
+              return `<div class="hour-row" onclick="event.stopPropagation(); abrirHistorial('${escapeAttr(h.categoria)}','${escapeAttr(h.tiempo)}','${escapeAttr(h.nombre)}')"><span>${escapeHtml(TIME_LABEL[h.tiempo] || h.tiempo)}</span><strong>${hText}</strong></div>`;
+            }).join("")}
           </div>
         </div>
       `;
@@ -1409,7 +1524,7 @@ function abrirDetalleCategoriaRitmo(categoria){
 
   html += `</div>
     <div class="ritmo-card">
-      <div class="note">Esta vista te ayuda a entender qué hiciste en ${escapeHtml(label)} durante el periodo seleccionado. Si notas cambios, este resumen te sirve para interpretarlos mejor o compartirlos con un especialista.</div>
+      <div class="note">Esta vista te ayuda a entender qué hiciste en ${escapeHtml(label)} durante el periodo seleccionado. Los horarios quedan guardados como detalle para revisar solo cuando lo necesites.</div>
     </div>
   `;
 
