@@ -23,24 +23,20 @@ async function readSheet(sheets, range) {
   return res.data.values || [];
 }
 
-async function clearAndWrite(sheets, range, values) {
-  await sheets.spreadsheets.values.clear({
-    spreadsheetId: SHEET_ID,
-    range,
-  });
-
-  if (values.length > 0) {
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range,
-      valueInputOption: "RAW",
-      requestBody: { values },
-    });
-  }
-}
-
 function normalize(v) {
   return String(v || "").toLowerCase().trim();
+}
+
+function normalizeKey(v) {
+  return String(v || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function sameKey(a, b) {
+  return normalizeKey(a) === normalizeKey(b);
 }
 
 function cleanList(v) {
@@ -196,7 +192,7 @@ exports.handler = async (event) => {
         if (!fecha || !categoria || !tiempo || !nombre) continue;
         if (completado !== "true") continue;
 
-        const key = `${categoria}||${tiempo}||${nombre}`;
+        const key = `${normalizeKey(categoria)}||${normalizeKey(tiempo)}||${normalizeKey(nombre)}`;
         usageCounts[key] = (usageCounts[key] || 0) + 1;
       }
 
@@ -216,7 +212,7 @@ exports.handler = async (event) => {
       for (const row of rows) {
         const [fecha, c, t, n, completado] = row;
 
-        if (c === categoria && t === tiempo && n === nombre) {
+        if (sameKey(c, categoria) && sameKey(t, tiempo) && sameKey(n, nombre)) {
           historial.push({
             fecha,
             completado: completado === "true"
@@ -224,7 +220,7 @@ exports.handler = async (event) => {
         }
       }
 
-      historial.sort((a, b) => b.fecha.localeCompare(a.fecha));
+      historial.sort((a, b) => String(b.fecha || "").localeCompare(String(a.fecha || "")));
 
       return {
         statusCode: 200,
@@ -236,26 +232,44 @@ exports.handler = async (event) => {
     if (action === "saveCheck") {
       const { fecha, categoria, tiempo, nombre, completado } = data;
 
+      if (!fecha || !categoria || !tiempo || !nombre) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: "Faltan datos para guardar el check" }),
+        };
+      }
+
       const rows = await readSheet(sheets, "checks!A2:E");
-      const newRows = [["fecha", "categoria", "tiempo", "nombre", "completado"]];
-      let found = false;
+      let rowNumberToUpdate = null;
 
-      for (const r of rows) {
-        const [f, c, t, n] = r;
+      for (let i = 0; i < rows.length; i++) {
+        const [f, c, t, n] = rows[i];
 
-        if (f === fecha && c === categoria && t === tiempo && n === nombre) {
-          newRows.push([fecha, categoria, tiempo, nombre, String(completado)]);
-          found = true;
-        } else {
-          newRows.push(r);
+        if (f === fecha && sameKey(c, categoria) && sameKey(t, tiempo) && sameKey(n, nombre)) {
+          rowNumberToUpdate = i + 2; // A2:E empieza en la fila 2
+          break;
         }
       }
 
-      if (!found) {
-        newRows.push([fecha, categoria, tiempo, nombre, String(completado)]);
-      }
+      const values = [[fecha, categoria, tiempo, nombre, String(completado)]];
 
-      await clearAndWrite(sheets, "checks!A1:E", newRows);
+      if (rowNumberToUpdate) {
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SHEET_ID,
+          range: `checks!A${rowNumberToUpdate}:E${rowNumberToUpdate}`,
+          valueInputOption: "RAW",
+          requestBody: { values },
+        });
+      } else {
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: SHEET_ID,
+          range: "checks!A:E",
+          valueInputOption: "RAW",
+          insertDataOption: "INSERT_ROWS",
+          requestBody: { values },
+        });
+      }
 
       return {
         statusCode: 200,
