@@ -5,28 +5,618 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="theme-color" content="#f7f7f5" />
-<title>Rutinas y evolución</title>
+<title>Rutinas por categoría</title>
+
 <style>
-:root{--bg:#f7f7f5;--card:#fff;--text:#181816;--muted:#6d6d68;--border:rgba(0,0,0,.10);--green:#1D9E75;--red:#E24B4A;--amber-bg:#FAEEDA;--amber-text:#7A4B00;--radius:18px}
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.app{max-width:520px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom))}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}.top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.top-actions select,.period-controls select,.period-controls input,.evo-form input,.evo-form select,.evo-form textarea{border:1px solid var(--border);background:#fff;color:var(--text);border-radius:999px;padding:10px 12px;font-size:14px;font-weight:750;outline:none}.evo-form textarea{border-radius:16px;width:100%;min-height:82px;font-weight:500;resize:vertical}h1{font-size:34px;line-height:1;margin:0 0 8px;letter-spacing:-.04em}.date{color:var(--muted);font-size:15px}.status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:4px}.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}.dot.ok{background:var(--green)}.dot.err{background:var(--red)}.tabs{display:inline-flex;border:1px solid var(--border);background:#fff;border-radius:999px;padding:4px;gap:2px}.tab{border:none;background:transparent;border-radius:999px;padding:8px 13px;font-size:14px;font-weight:850;color:var(--muted);cursor:pointer}.tab.active{background:var(--text);color:#fff}.small-btn{border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:999px;padding:10px 13px;font-size:14px;font-weight:650;cursor:pointer}.summary,.section-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin:14px 0 16px}.summary-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px}.summary-title{font-size:15px;font-weight:750}.summary-pct{font-size:18px;font-weight:900;text-align:right}.bar{height:8px;background:rgba(0,0,0,.08);border-radius:999px;overflow:hidden}.fill{height:100%;width:0%;background:var(--green);border-radius:999px;transition:.25s width ease}.summary-foot{display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:var(--muted);gap:10px}.error-box{display:none;background:#fff;border:1px solid rgba(226,75,74,.25);color:#8a1f1f;border-radius:14px;padding:12px;margin:12px 0;font-size:13px;line-height:1.45;white-space:pre-wrap}.category-group{margin-bottom:14px}.category-header{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--text);user-select:none;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,.03)}.category-title{display:flex;align-items:center;gap:12px;flex:1;min-width:0;font-size:17px;font-weight:850;text-transform:uppercase;letter-spacing:.04em}.category-caret{color:var(--muted);font-size:22px;width:18px;text-align:center}.category-icon{font-size:21px;width:26px;text-align:center}.category-count{font-size:17px;color:var(--text);font-weight:850;white-space:nowrap}.category-body{display:block;margin-top:10px}.item{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 12px;margin-bottom:9px;display:flex;align-items:center;justify-content:space-between;gap:12px}.item-left{min-width:0;flex:1;display:flex;gap:10px;align-items:flex-start;cursor:pointer}.item-icon{width:24px;flex:0 0 24px;font-size:18px;line-height:1.2;margin-top:1px}.item-text{min-width:0}.item-name{font-size:16px;font-weight:650;line-height:1.25}.item.done .item-name{text-decoration:line-through;color:#9b9b95}.item-meta{margin-top:3px;font-size:12px;color:var(--muted);line-height:1.35}.badge{display:inline-block;margin-left:4px;padding:2px 7px;border-radius:999px;background:var(--amber-bg);color:var(--amber-text);font-size:11px;vertical-align:1px}.check{width:34px;height:34px;flex:0 0 34px;border-radius:50%;border:1.5px solid var(--border);background:white;color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}.item.done .check{background:var(--green);border-color:var(--green)}.empty{border:1px dashed var(--border);color:var(--muted);border-radius:14px;padding:14px;font-size:14px;text-align:center;background:rgba(255,255,255,.45);margin-bottom:9px}.modal{position:fixed;inset:0;background:rgba(0,0,0,.38);display:none;align-items:flex-end;justify-content:center;z-index:999}.modal-card{width:100%;max-width:520px;max-height:82vh;overflow:auto;background:var(--card);border-radius:24px 24px 0 0;padding:18px 16px calc(24px + env(safe-area-inset-bottom))}.modal-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}.modal-title{font-size:24px;line-height:1.1;font-weight:800;letter-spacing:-.03em}.modal-subtitle{margin-top:6px;color:var(--muted);font-size:13px}.modal-close{border:1px solid var(--border);background:#fff;border-radius:999px;width:34px;height:34px;font-size:20px;cursor:pointer}.history-stats,.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.stat-card{border:1px solid var(--border);border-radius:14px;padding:10px;background:#fff}.stat-value{font-size:20px;font-weight:800}.stat-label{font-size:12px;color:var(--muted);margin-top:3px}.history-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(0,0,0,.07);padding:10px 2px;font-size:14px}.history-row:last-child{border-bottom:none}.history-empty{color:var(--muted);text-align:center;padding:20px 8px;border:1px dashed var(--border);border-radius:14px}.product-summary-row,.period-row,.evo-row{border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:9px;background:#fff}.product-summary-top,.period-row-top,.evo-row-top{display:flex;justify-content:space-between;gap:10px;font-size:15px;font-weight:750}.product-summary-meta,.period-row-meta,.evo-row-meta{margin-top:5px;color:var(--muted);font-size:13px;line-height:1.35}.period-controls{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.period-controls input{max-width:150px}.section-title{font-size:19px;font-weight:900;margin:0 0 10px}.insight-box{background:#fff;border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:10px}.insight-box strong{display:block;margin-bottom:4px}.evo-form{display:grid;gap:9px}.evo-links{display:grid;grid-template-columns:1fr;gap:8px}.photo-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.photo-pair img{width:100%;height:140px;object-fit:cover;border-radius:14px;border:1px solid var(--border);background:#f1f1ef}.hidden{display:none!important}@media(max-width:420px){.top{display:block}.top-actions{justify-content:flex-start;margin-top:12px}.history-stats,.insight-grid{grid-template-columns:1fr}.summary-row{display:block}.summary-pct{text-align:left;margin-top:6px}.photo-pair{grid-template-columns:1fr}}
+:root{
+  --bg:#f7f7f5;
+  --card:#fff;
+  --text:#181816;
+  --muted:#6d6d68;
+  --border:rgba(0,0,0,.10);
+  --green:#1D9E75;
+  --amber-bg:#FAEEDA;
+  --amber-text:#7A4B00;
+  --radius:18px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.app{
+  max-width:520px;
+  margin:0 auto;
+  padding:calc(18px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:14px;
+}
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-shrink:0;
+}
+.top-actions select{
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--text);
+  border-radius:999px;
+  padding:8px 10px;
+  font-size:13px;
+  font-weight:750;
+  outline:none;
+  max-width:118px;
+}
+h1{
+  font-size:34px;
+  line-height:1;
+  margin:0 0 8px;
+  letter-spacing:-.04em;
+}
+.date{
+  color:var(--muted);
+  font-size:15px;
+}
+.status{
+  font-size:13px;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:4px;
+}
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--muted);
+}
+.dot.ok{background:var(--green)}
+.dot.err{background:#E24B4A}
+.summary{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px;
+  margin:14px 0 16px;
+}
+.summary-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+.summary-title{
+  font-size:15px;
+  font-weight:650;
+}
+.summary-pct{
+  font-size:18px;
+  font-weight:800;
+  text-align:right;
+}
+.bar{
+  height:8px;
+  background:rgba(0,0,0,.08);
+  border-radius:999px;
+  overflow:hidden;
+}
+.fill{
+  height:100%;
+  width:0%;
+  background:var(--green);
+  border-radius:999px;
+  transition:.25s width ease;
+}
+.summary-foot{
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.view-filter{
+  display:none;
+}.view-filter label{
+  display:none;
+}
+.view-filter select{
+  width:100%;
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--text);
+  border-radius:999px;
+  padding:13px 16px;
+  font-size:17px;
+  font-weight:800;
+  outline:none;
+  box-shadow:0 1px 0 rgba(0,0,0,.03);
+}
+.filter-note{
+  display:none;
+}
+.categories-container{
+  margin-top:4px;
+}
+
+
+.time-section{
+  margin-top:14px;
+}
+.time-header{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  cursor:pointer;
+  user-select:none;
+}
+.time-title-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.time-title{
+  font-size:20px;
+  font-weight:800;
+}
+.caret{
+  color:var(--muted);
+  font-size:15px;
+  width:18px;
+  text-align:center;
+}
+.time-count{
+  font-size:14px;
+  color:var(--muted);
+  font-weight:650;
+}
+.time-body{
+  margin-top:8px;
+  display:none;
+}
+.time-section.open .time-body{
+  display:block;
+}
+.category-group{
+  margin-bottom:14px;
+}
+.category-header{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  color:var(--text);
+  user-select:none;
+  cursor:pointer;
+  box-shadow:0 1px 0 rgba(0,0,0,.03);
+}
+.category-title{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex:1;
+  min-width:0;
+  font-size:17px;
+  font-weight:850;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.category-caret{
+  color:var(--muted);
+  font-size:22px;
+  width:18px;
+  text-align:center;
+}
+.category-icon{
+  font-size:21px;
+  width:26px;
+  text-align:center;
+}
+.category-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.category-count{
+  font-size:17px;
+  color:var(--text);
+  font-weight:850;
+  white-space:nowrap;
+}
+.category-summary-btn{
+  display:none;
+}
+.category-body{
+  display:block;
+  margin-top:10px;
+}
+
+.item{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:13px 12px;
+  margin-bottom:9px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.item-left{
+  min-width:0;
+  flex:1;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  cursor:pointer;
+}
+.item-icon{
+  width:24px;
+  flex:0 0 24px;
+  font-size:18px;
+  line-height:1.2;
+  margin-top:1px;
+}
+.item-text{
+  min-width:0;
+}
+.item-name{
+  font-size:16px;
+  font-weight:650;
+  line-height:1.25;
+}
+.item.done .item-name{
+  text-decoration:line-through;
+  color:#9b9b95;
+}
+.item-meta{
+  margin-top:3px;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.35;
+}
+.badge{
+  display:inline-block;
+  margin-left:4px;
+  padding:2px 7px;
+  border-radius:999px;
+  background:var(--amber-bg);
+  color:var(--amber-text);
+  font-size:11px;
+  vertical-align:1px;
+}
+.check{
+  width:34px;
+  height:34px;
+  flex:0 0 34px;
+  border-radius:50%;
+  border:1.5px solid var(--border);
+  background:white;
+  color:white;
+  font-size:18px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.item.done .check{
+  background:var(--green);
+  border-color:var(--green);
+}
+.empty{
+  border:1px dashed var(--border);
+  color:var(--muted);
+  border-radius:14px;
+  padding:14px;
+  font-size:14px;
+  text-align:center;
+  background:rgba(255,255,255,.45);
+  margin-bottom:9px;
+}
+.small-btn{
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  border-radius:999px;
+  padding:8px 12px;
+  font-size:13px;
+  cursor:pointer;
+}
+.error-box{
+  display:none;
+  background:#fff;
+  border:1px solid rgba(226,75,74,.25);
+  color:#8a1f1f;
+  border-radius:14px;
+  padding:12px;
+  margin:12px 0;
+  font-size:13px;
+  line-height:1.45;
+  white-space:pre-wrap;
+}
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.38);
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  z-index:999;
+}
+.modal-card{
+  width:100%;
+  max-width:520px;
+  max-height:82vh;
+  overflow:auto;
+  background:var(--card);
+  border-radius:24px 24px 0 0;
+  padding:18px 16px calc(24px + env(safe-area-inset-bottom));
+}
+.modal-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:12px;
+}
+.modal-title{
+  font-size:24px;
+  line-height:1.1;
+  font-weight:800;
+  letter-spacing:-.03em;
+}
+.modal-subtitle{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:13px;
+}
+.modal-close{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:999px;
+  width:34px;
+  height:34px;
+  font-size:20px;
+  cursor:pointer;
+}
+.history-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:14px 0;
+}
+.stat-card{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:10px;
+  background:#fff;
+}
+.stat-value{
+  font-size:20px;
+  font-weight:800;
+}
+.stat-label{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:3px;
+}
+.history-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid rgba(0,0,0,.07);
+  padding:10px 2px;
+  font-size:14px;
+}
+.history-row:last-child{
+  border-bottom:none;
+}
+.history-empty{
+  color:var(--muted);
+  text-align:center;
+  padding:20px 8px;
+  border:1px dashed var(--border);
+  border-radius:14px;
+}
+.product-summary-row{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:9px;
+  background:#fff;
+}
+.product-summary-top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  font-size:15px;
+  font-weight:750;
+}
+.product-summary-meta{
+  margin-top:5px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.view-mode{
+  display:flex;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:3px;
+  gap:3px;
+}
+.view-mode button{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  border-radius:999px;
+  padding:7px 10px;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
+}
+.view-mode button.active{
+  background:var(--text);
+  color:#fff;
+}
+.ritmo-msg{
+  margin-top:8px;
+  font-size:14px;
+  color:var(--muted);
+  line-height:1.4;
+}
+.ritmo-controls{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:0 0 12px;
+}
+.ritmo-pill{
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--muted);
+  border-radius:999px;
+  padding:10px 8px;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
+}
+.ritmo-pill.active{
+  background:var(--text);
+  color:#fff;
+  border-color:var(--text);
+}
+.ritmo-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px 14px;
+  margin-bottom:12px;
+}
+.ritmo-card-title{
+  font-size:17px;
+  font-weight:850;
+  margin-bottom:10px;
+}
+.ritmo-insight{
+  font-size:17px;
+  font-weight:750;
+  line-height:1.35;
+}
+.ritmo-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:12px 0;
+  border-bottom:1px solid rgba(0,0,0,.07);
+}
+.ritmo-row:last-child{border-bottom:none;}
+.ritmo-row-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:750;
+}
+.ritmo-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:var(--green);
+  flex:0 0 10px;
+}
+.ritmo-dot.mid{background:#E4A72C;}
+.ritmo-dot.low{background:#E35D5B;}
+.ritmo-value{font-weight:900;}
+.ritmo-mini-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:12px;
+}
+.ritmo-mini{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:13px;
+}
+.ritmo-mini-label{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:750;
+  margin-bottom:4px;
+}
+.ritmo-mini-value{
+  font-size:18px;
+  font-weight:900;
+}
+.ritmo-detail-btn{
+  width:100%;
+  border:0;
+  background:var(--text);
+  color:#fff;
+  border-radius:16px;
+  padding:15px;
+  font-size:16px;
+  font-weight:850;
+  cursor:pointer;
+  margin-bottom:12px;
+}
+.ritmo-detail{display:none;}
+.ritmo-detail.open{display:block;}
+.ritmo-empty{
+  border:1px dashed var(--border);
+  color:var(--muted);
+  border-radius:14px;
+  padding:14px;
+  background:rgba(255,255,255,.45);
+  text-align:center;
+}
+.note{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.4;
+}
+
 </style>
 </head>
+
 <body>
 <div class="app">
   <div class="top">
     <div>
-      <h1 id="main-title">Hoy</h1>
+      <h1>Hoy</h1>
       <div class="date" id="date"></div>
       <div class="status"><span class="dot" id="status-dot"></span><span id="status">Cargando...</span></div>
     </div>
     <div class="top-actions">
-      <div class="tabs" aria-label="Vista">
-        <button class="tab active" id="tab-hoy" onclick="setViewMode('hoy')">Hoy</button>
-        <button class="tab" id="tab-historico" onclick="setViewMode('historico')">Histórico</button>
-        <button class="tab" id="tab-periodo" onclick="setViewMode('periodo')">Periodo</button>
+      <div class="view-mode" aria-label="Modo de vista">
+        <button id="btn-hoy" type="button" onclick="setViewMode('hoy')">Hoy</button>
+        <button id="btn-ritmo" type="button" onclick="setViewMode('ritmo')">Cómo voy</button>
       </div>
       <select id="time-filter" onchange="setTimeFilter(this.value)" aria-label="Ver rutina">
-        <option value="todo">Todo</option><option value="manana">Mañana</option><option value="tarde">Tarde</option><option value="noche">Noche</option>
+        <option value="todo">Todo</option>
+        <option value="manana">Mañana</option>
+        <option value="tarde">Tarde</option>
+        <option value="noche">Noche</option>
       </select>
       <button class="small-btn" onclick="cargar()">Actualizar</button>
     </div>
@@ -34,19 +624,34 @@
 
   <div class="error-box" id="error-box"></div>
 
-  <div class="summary" id="summary-card">
-    <div class="summary-row"><div class="summary-title" id="summary-title">Progreso del día</div><div class="summary-pct" id="pct">0%</div></div>
+  <div class="summary">
+    <div class="summary-row">
+      <div class="summary-title" id="summary-title">Ritmo de hoy</div>
+      <div class="summary-pct" id="pct">0%</div>
+    </div>
+    <div id="ritmo-msg" class="ritmo-msg"></div>
     <div class="bar"><div class="fill" id="fill"></div></div>
-    <div class="summary-foot"><span id="done-count">0/0 completados</span><span id="pending-count">0 pendientes</span></div>
+    <div class="summary-foot">
+      <span id="done-count">0/0 completados</span>
+      <span id="pending-count">0 pendientes</span>
+    </div>
   </div>
 
-  <div id="period-panel" class="hidden"></div>
-  <div id="categories-container"></div>
+
+  <div class="filter-note" id="filter-note"></div>
+  <div class="categories-container" id="categories-container"></div>
 </div>
 
 <div class="modal" id="history-modal" onclick="cerrarModalSiFondo(event)">
   <div class="modal-card">
-    <div class="modal-top"><div><div class="modal-title" id="modal-title">Producto</div><div class="modal-subtitle" id="modal-subtitle"></div></div><button class="modal-close" onclick="cerrarModal()">×</button></div>
+    <div class="modal-top">
+      <div>
+        <div class="modal-title" id="modal-title">Producto</div>
+        <div class="modal-subtitle" id="modal-subtitle"></div>
+      </div>
+      <button class="modal-close" onclick="cerrarModal()">×</button>
+    </div>
+
     <div id="modal-content"></div>
   </div>
 </div>
@@ -55,135 +660,902 @@
 const API = "/.netlify/functions/sheets";
 const TIMES = ["manana","tarde","noche"];
 const TIME_LABEL = { manana:"Mañana", tarde:"Tarde", noche:"Noche" };
-const CAT_LABEL = { dermato:"Derma", derma:"Derma", suplementos:"Suplementos", suplemento:"Suplementos", ejercicio:"Ejercicio", bienestar:"Bienestar", sueno:"Sueño", sueño:"Sueño", wellness:"Wellness" };
-const CAT_ICON = { dermato:"🧴", derma:"🧴", suplementos:"💊", suplemento:"💊", ejercicio:"🏋️", bienestar:"🧘", sueno:"😴", sueño:"😴", wellness:"✨" };
-const CAT_ORDER = { dermato:1, derma:1, suplementos:2, suplemento:2, ejercicio:3, bienestar:4, sueno:5, sueño:5, wellness:6 };
-const DAYS_ES = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
-const WELLNESS_ITEMS = [{ nombre:"Meditación", note:"" },{ nombre:"Sauna", note:"" },{ nombre:"Hielos", note:"" }];
 
-let planObj = {}, checksObj = {}, allChecks = [], evoluciones = [], currentItems = [];
+const WELLNESS_ITEMS = [
+  { nombre:"Meditación", note:"" },
+  { nombre:"Sauna", note:"" },
+  { nombre:"Hielos", note:"" }
+];
+
+const CAT_LABEL = {
+  dermato:"Derma",
+  derma:"Derma",
+  suplementos:"Suplementos",
+  suplemento:"Suplementos",
+  ejercicio:"Ejercicio",
+  bienestar:"Bienestar",
+  sueno:"Sueño",
+  sueño:"Sueño",
+  wellness:"Wellness"
+};
+
+const CAT_ICON = {
+  dermato:"🧴",
+  derma:"🧴",
+  suplementos:"💊",
+  suplemento:"💊",
+  ejercicio:"🏋️",
+  bienestar:"🧘",
+  sueno:"😴",
+  sueño:"😴",
+  wellness:"✨"
+};
+
+const CAT_ORDER = {
+  dermato:1,
+  derma:1,
+  suplementos:2,
+  suplemento:2,
+  ejercicio:3,
+  bienestar:4,
+  sueno:5,
+  sueño:5,
+  wellness:6
+};
+
+const DAYS_ES = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
+
+let planObj = {};
+let checksObj = {};
+let todayItems = [];
 let selectedTiempo = localStorage.getItem("selectedTiempoV4") || "todo";
 let viewMode = localStorage.getItem("viewModeV2") || "hoy";
+let ritmoPeriodo = localStorage.getItem("ritmoPeriodoV1") || "mes";
+let ritmoReport = null;
+let openSections = {}; // ya no se usa para mostrar secciones, se conserva por compatibilidad local
 let openCategories = {};
-let periodPreset = localStorage.getItem("periodPreset") || "mes";
 
 function pad(n){ return String(n).padStart(2,"0"); }
-function dateKey(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-function todayKey(){ return dateKey(new Date()); }
-function todayDow(fecha){ const d = fecha ? new Date(fecha + "T12:00:00") : new Date(); return DAYS_ES[d.getDay()]; }
-function addDays(fechaKey, dias){ const d = new Date(fechaKey + "T12:00:00"); d.setDate(d.getDate()+dias); return dateKey(d); }
-function normalize(s){ return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim(); }
-function same(a,b){ return normalize(a) === normalize(b); }
-function escapeHtml(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function escapeAttr(s){ return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/'/g,"&#39;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function formatFecha(fecha){ if(!fecha) return ""; const p=String(fecha).split("-"); return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:fecha; }
-function getCategoriaLabel(c){ return CAT_LABEL[c] || c || ""; }
-function getCategoriaIcon(c){ return CAT_ICON[c] || "•"; }
-function localDateText(){ const d=new Date(), meses=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"]; const dia=todayDow(); return dia.charAt(0).toUpperCase()+dia.slice(1)+`, ${d.getDate()} de ${meses[d.getMonth()]}`; }
-function setStatus(text,type){ document.getElementById("status").textContent=text; const dot=document.getElementById("status-dot"); dot.className="dot"+(type==="ok"?" ok":type==="err"?" err":""); }
-function showError(msg){ const box=document.getElementById("error-box"); box.style.display=msg?"block":"none"; box.textContent=msg||""; }
 
-async function postSheets(action,data={}){ const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,data})}); const raw=await res.text(); let json; try{json=JSON.parse(raw)}catch(e){throw new Error(`La función no regresó JSON. Status: ${res.status}. Respuesta: ${raw.slice(0,220)}`)} if(!res.ok||json.error) throw new Error(json.error||`Error HTTP ${res.status}`); return json; }
+function todayKey(){
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function todayDow(){
+  return DAYS_ES[new Date().getDay()];
+}
+
+function currentTimeSection(){
+  const h = new Date().getHours();
+  if(h >= 5 && h < 12) return "manana";
+  if(h >= 12 && h < 19) return "tarde";
+  return "noche";
+}
+
+function initOpenSections(){
+  // Siempre iniciar categorías colapsadas
+  openCategories = {};
+  localStorage.removeItem("openCategoriesV4");
+  localStorage.removeItem("openCategoriesV3");
+
+  const filter = document.getElementById("time-filter");
+  if(filter) filter.value = selectedTiempo;
+  syncViewModeUI();
+}
+
+function setTimeFilter(value){
+  selectedTiempo = value || "todo";
+  localStorage.setItem("selectedTiempoV4", selectedTiempo);
+  render();
+}
+
+function setViewMode(value){
+  viewMode = value === "ritmo" ? "ritmo" : "hoy";
+  localStorage.setItem("viewModeV2", viewMode);
+  syncViewModeUI();
+  if(viewMode === "ritmo") cargarRitmoReport();
+  render();
+}
+
+function syncViewModeUI(){
+  const hoy = document.getElementById("btn-hoy");
+  const ritmo = document.getElementById("btn-ritmo");
+  if(hoy) hoy.classList.toggle("active", viewMode === "hoy");
+  if(ritmo) ritmo.classList.toggle("active", viewMode === "ritmo");
+}
+
+
+function saveOpenSections(){
+  localStorage.setItem("openSectionsV3", JSON.stringify(openSections));
+}
+
+function saveOpenCategories(){
+  localStorage.setItem("openCategoriesV4", JSON.stringify(openCategories));
+}
+
+function toggleSection(t){
+  openSections[t] = !openSections[t];
+  saveOpenSections();
+  applyOpenState();
+}
+
+function applyOpenState(){
+  // En esta versión ya no mostramos Mañana/Tarde/Noche como bloques principales.
+  // La función queda por compatibilidad para no romper estados guardados anteriores.
+}
+
+function cleanId(s){
+  return String(s || "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/\s+/g,"-")
+    .replace(/[^a-zA-Z0-9-_]/g,"");
+}
+
+function toggleCategoria(id){
+  openCategories[id] = !openCategories[id];
+  saveOpenCategories();
+
+  const body = document.getElementById("cat-body-" + id);
+  const caret = document.getElementById("cat-caret-" + id);
+
+  if(body) body.style.display = openCategories[id] ? "block" : "none";
+  if(caret) caret.textContent = openCategories[id] ? "⌄" : "›";
+}
+
+function localDateText(){
+  const d = new Date();
+  const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  const dia = todayDow();
+  return dia.charAt(0).toUpperCase()+dia.slice(1)+`, ${d.getDate()} de ${meses[d.getMonth()]}`;
+}
+
+function setStatus(text, type){
+  document.getElementById("status").textContent = text;
+  const dot = document.getElementById("status-dot");
+  dot.className = "dot" + (type === "ok" ? " ok" : type === "err" ? " err" : "");
+}
+
+function showError(msg){
+  const box = document.getElementById("error-box");
+  if(!msg){
+    box.style.display = "none";
+    box.textContent = "";
+    return;
+  }
+  box.style.display = "block";
+  box.textContent = msg;
+}
+
+async function postSheets(action, data = {}){
+  const res = await fetch(API, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ action, data })
+  });
+
+  const raw = await res.text();
+  let json;
+  try {
+    json = JSON.parse(raw);
+  } catch(e) {
+    throw new Error(`La función no regresó JSON.\nStatus: ${res.status}\nRespuesta: ${raw.slice(0,250)}`);
+  }
+
+  if(!res.ok || json.error){
+    throw new Error(json.error || `Error HTTP ${res.status}`);
+  }
+
+  return json;
+}
 
 async function cargar(){
   try{
-    showError(""); setStatus("Sincronizando...","");
-    const fecha=todayKey();
-    const [planRes, checksRes, allChecksRes, evoRes] = await Promise.all([
-      postSheets("getPlan"), postSheets("getChecks",{fecha}), postSheets("getAllChecks"), postSheets("getEvoluciones")
+    showError("");
+    setStatus("Sincronizando...", "");
+
+    const fecha = todayKey();
+
+    const [planRes, checksRes] = await Promise.all([
+      postSheets("getPlan"),
+      postSheets("getChecks", { fecha })
     ]);
-    planObj=planRes.plan||{}; checksObj=checksRes.checks||{}; allChecks=allChecksRes.checks||[]; evoluciones=evoRes.evoluciones||[];
-    setStatus("Sincronizado","ok"); render();
-  }catch(e){ console.error(e); setStatus("Error conexión","err"); showError(e.message||String(e)); }
+
+    planObj = planRes.plan || {};
+    checksObj = checksRes.checks || {};
+
+    if(viewMode === "ritmo"){
+      try{
+        const ritmoRes = await postSheets("getRitmoReport", { periodo: ritmoPeriodo });
+        ritmoReport = ritmoRes.report || null;
+      }catch(reportErr){
+        console.warn(reportErr);
+      }
+    }
+
+    setStatus("Sincronizado", "ok");
+    render();
+
+  }catch(e){
+    console.error(e);
+    setStatus("Error conexión", "err");
+    showError(e.message || String(e));
+  }
 }
 
-function setViewMode(mode){ viewMode=mode; localStorage.setItem("viewModeV2",mode); render(); }
-function setTimeFilter(value){ selectedTiempo=value||"todo"; localStorage.setItem("selectedTiempoV4",selectedTiempo); render(); }
-function cleanId(s){ return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"-").replace(/[^a-zA-Z0-9-_]/g,""); }
-function toggleCategoria(id){ openCategories[id]=!openCategories[id]; const body=document.getElementById("cat-body-"+id), caret=document.getElementById("cat-caret-"+id); if(body) body.style.display=openCategories[id]?"block":"none"; if(caret) caret.textContent=openCategories[id]?"⌄":"›"; }
+function getDiasRestantes(cfg){
+  // Días futuros que faltan después de hoy.
+  // Ejemplo: tratamiento 20 días que inició el 11/04, el 25/04 faltan 5 días: 26,27,28,29,30.
+  if(!cfg || !cfg.inicio || !cfg.diasCiclo) return null;
+  const inicio = new Date(cfg.inicio + "T12:00:00");
+  const hoy = new Date(todayKey() + "T12:00:00");
+  const total = Number(cfg.diasCiclo);
+  if(!total) return null;
 
-function getDiasRestantes(cfg){ if(!cfg||!cfg.inicio||!cfg.diasCiclo) return null; const inicio=new Date(cfg.inicio+"T12:00:00"), hoy=new Date(todayKey()+"T12:00:00"), total=Number(cfg.diasCiclo); if(!total) return null; const fin=new Date(inicio); fin.setDate(fin.getDate()+total-1); return Math.max(0,Math.round((fin-hoy)/86400000)); }
-function isDateActiveForCfg(cfg, fecha){ if(!cfg) return false; const dow=todayDow(fecha); const dias=cfg.days ?? cfg.dias ?? "todos"; let dayOk=false; if(dias==="todos") dayOk=true; else if(Array.isArray(dias)) dayOk=dias.includes(dow); else dayOk=String(dias).split(",").map(x=>normalize(x)).includes(dow); if(!dayOk) return false; if(cfg.inicio){ if(fecha < cfg.inicio) return false; if(cfg.diasCiclo){ const fin=addDays(cfg.inicio, Number(cfg.diasCiclo)-1); if(fecha > fin) return false; } } return true; }
-function isActiveCfg(cfg){ return isDateActiveForCfg(cfg,todayKey()); }
+  const fin = new Date(inicio);
+  fin.setDate(fin.getDate() + total - 1);
 
-function flattenPlan(includeHistorical=false){
-  const out=[];
-  Object.entries(planObj||{}).forEach(([categoria,times])=>{
+  const restantes = Math.round((fin - hoy) / 86400000);
+  return Math.max(0, restantes);
+}
+
+function cicloActivoHoy(cfg){
+  if(!cfg || !cfg.inicio || !cfg.diasCiclo) return true;
+  const inicio = new Date(cfg.inicio + "T12:00:00");
+  const hoy = new Date(todayKey() + "T12:00:00");
+  const diff = Math.round((hoy - inicio) / 86400000);
+  const total = Number(cfg.diasCiclo);
+  if(!total) return true;
+
+  return diff >= 0 && diff < total;
+}
+
+function isActiveCfg(cfg){
+  if(!cfg) return false;
+
+  const dow = todayDow();
+  const dias = cfg.days ?? cfg.dias ?? "todos";
+
+  let dayOk = false;
+  if(dias === "todos") dayOk = true;
+  else if(Array.isArray(dias)) dayOk = dias.includes(dow);
+  else dayOk = String(dias).split(",").map(x=>x.trim()).includes(dow);
+
+  if(!dayOk) return false;
+
+  if(cfg.inicio){
+    if(cfg.inicio > todayKey()) return false;
+    if(cfg.diasCiclo && !cicloActivoHoy(cfg)) return false;
+  }
+
+  return true;
+}
+
+function flattenPlan(){
+  const out = [];
+  Object.entries(planObj || {}).forEach(([categoria, times])=>{
     TIMES.forEach(tiempo=>{
-      Object.entries((times&&times[tiempo])||{}).forEach(([nombre,cfg])=>{
-        if(includeHistorical || isActiveCfg(cfg)) out.push({categoria,tiempo,nombre,note:cfg.note||cfg.nota||"",inicio:cfg.inicio||"",diasRestantes:cfg.diasCiclo?getDiasRestantes(cfg):null,diasCicloTotal:cfg.diasCiclo||null,days:cfg.days||"todos"});
+      Object.entries((times && times[tiempo]) || {}).forEach(([nombre, cfg])=>{
+        if(isActiveCfg(cfg)){
+          out.push({
+            categoria,
+            tiempo,
+            nombre,
+            note: cfg.note || cfg.nota || "",
+            inicio: cfg.inicio || "",
+            diasRestantes: cfg.diasCiclo ? getDiasRestantes(cfg) : null,
+            diasCicloTotal: cfg.diasCiclo || null
+          });
+        }
       });
     });
   });
-  TIMES.forEach(tiempo=>WELLNESS_ITEMS.forEach(w=>{
-    out.push({categoria:"wellness",tiempo,nombre:w.nombre,note:w.note||"",inicio:"",diasRestantes:null,diasCicloTotal:null,days:"todos"});
-  }));
-  out.sort((a,b)=>((CAT_ORDER[a.categoria]||99)-(CAT_ORDER[b.categoria]||99)) || a.nombre.localeCompare(b.nombre));
+
+  TIMES.forEach(tiempo=>{
+    WELLNESS_ITEMS.forEach(w=>{
+      out.push({
+        categoria:"wellness",
+        tiempo,
+        nombre:w.nombre,
+        note:w.note || "",
+        inicio:"",
+        diasRestantes:null,
+        diasCicloTotal:null
+      });
+    });
+  });
+
+  out.sort((a,b)=>{
+    const catDiff = (CAT_ORDER[a.categoria] || 99) - (CAT_ORDER[b.categoria] || 99);
+    if(catDiff !== 0) return catDiff;
+    return a.nombre.localeCompare(b.nombre);
+  });
+
   return out;
 }
 
-function getCheck(categoria,tiempo,nombre){ return !!(checksObj?.[categoria]?.[tiempo]?.[nombre]); }
-function usedCountForItem(item,start,end){ return allChecks.filter(c=>c.completado && c.fecha>=start && c.fecha<=end && same(c.categoria,item.categoria) && same(c.tiempo,item.tiempo) && same(c.nombre,item.nombre)).length; }
-function totalUsedForItem(item){ return allChecks.filter(c=>c.completado && same(c.categoria,item.categoria) && same(c.tiempo,item.tiempo) && same(c.nombre,item.nombre)).length; }
-function expectedForItem(item,start,end){ let n=0, d=start; while(d<=end){ if(isDateActiveForCfg(item,d)) n++; d=addDays(d,1); } return n; }
-function groupByCategoria(items){ const groups={}; items.forEach(it=>{ const cat=it.categoria||"__sin_categoria__"; if(!groups[cat]) groups[cat]=[]; groups[cat].push(it); }); return Object.keys(groups).sort((a,b)=>(CAT_ORDER[a]||99)-(CAT_ORDER[b]||99)).map(c=>({categoria:c,items:groups[c]})); }
+function getCheck(categoria, tiempo, nombre){
+  return !!(checksObj &&
+    checksObj[categoria] &&
+    checksObj[categoria][tiempo] &&
+    checksObj[categoria][tiempo][nombre]);
+}
 
-function renderItem(it, mode="hoy"){
-  const doneItem=getCheck(it.categoria,it.tiempo,it.nombre);
-  const badge=it.diasRestantes!==null && mode==="hoy" ? `<span class="badge">faltan ${it.diasRestantes}d</span>` : "";
-  const total=it.diasCicloTotal?Number(it.diasCicloTotal):null;
-  const usados=totalUsedForItem(it);
-  const pct=total?Math.round(usados/total*100):null;
-  const metaParts=[`<strong>${TIME_LABEL[it.tiempo]||it.tiempo}</strong>`];
-  if(mode==="historico") metaParts.push(total?`${usados}/${total} usos · ${pct}%`:`${usados} usos registrados`);
-  if(it.note && mode==="hoy") metaParts.push(escapeHtml(it.note));
-  const div=document.createElement("div"); div.className="item"+(doneItem&&mode==="hoy"?" done":"");
-  div.innerHTML=`<div class="item-left" onclick="abrirHistorial('${escapeAttr(it.categoria)}','${escapeAttr(it.tiempo)}','${escapeAttr(it.nombre)}')"><div class="item-icon">${getCategoriaIcon(it.categoria)}</div><div class="item-text"><div class="item-name">${escapeHtml(it.nombre)}</div><div class="item-meta">${metaParts.join(" · ")}${badge}</div></div></div>${mode==="hoy"?`<button class="check" aria-label="Completar" onclick="event.stopPropagation(); toggleCheck('${escapeAttr(it.categoria)}','${escapeAttr(it.tiempo)}','${escapeAttr(it.nombre)}')">✓</button>`:""}`;
+function escapeAttr(s){
+  return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/'/g,"&#39;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function getCategoriaLabel(categoria){
+  return CAT_LABEL[categoria] || categoria || "";
+}
+
+function getCategoriaIcon(categoria){
+  return CAT_ICON[categoria] || "";
+}
+
+function groupByCategoria(items){
+  const groups = {};
+
+  items.forEach(it=>{
+    const cat = it.categoria || "__sin_categoria__";
+    if(!groups[cat]) groups[cat] = [];
+    groups[cat].push(it);
+  });
+
+  return Object.keys(groups).sort((a,b)=>{
+    return (CAT_ORDER[a] || 99) - (CAT_ORDER[b] || 99);
+  }).map(cat=>({
+    categoria: cat,
+    items: groups[cat]
+  }));
+}
+
+function formatFecha(fecha){
+  if(!fecha) return "";
+  const partes = fecha.split("-");
+  if(partes.length !== 3) return fecha;
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+function addDaysKey(fechaKey, dias){
+  const d = new Date(fechaKey + "T12:00:00");
+  d.setDate(d.getDate() + dias);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function normalizarFechaKey(valor){
+  if(!valor) return "";
+  const s = String(valor).trim();
+
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
+
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if(m) return `${m[3]}-${pad(m[2])}-${pad(m[1])}`;
+
+  const d = new Date(s);
+  if(!isNaN(d.getTime())) return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+  return s;
+}
+
+function esCompletado(valor){
+  if(valor === true || valor === 1) return true;
+  const s = String(valor ?? "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .trim()
+    .toLowerCase();
+  return ["true","si","yes","1","x","ok","aplicado","completado","done"].includes(s);
+}
+
+function normalizarHistorial(historial){
+  const mapa = {};
+  (historial || []).forEach(h=>{
+    if(!h) return;
+    const fecha = normalizarFechaKey(h.fecha || h.Fecha || h.date || h.Date);
+    if(!fecha) return;
+    const valor = h.completado ?? h.Completado ?? h.aplicado ?? h.Aplicado ?? h.status ?? h.Status ?? h.estado ?? h.Estado;
+    mapa[fecha] = esCompletado(valor);
+  });
+  return mapa;
+}
+
+function construirHistorialCompleto(itemActual, historialServidor){
+  const mapa = normalizarHistorial(historialServidor);
+
+  if(itemActual && itemActual.inicio && itemActual.diasCicloTotal){
+    const total = Number(itemActual.diasCicloTotal);
+    const hoy = todayKey();
+    const filas = [];
+
+    for(let i = 0; i < total; i++){
+      const fecha = addDaysKey(itemActual.inicio, i);
+      if(fecha > hoy) break;
+      filas.push({ fecha, completado: !!mapa[fecha] });
+    }
+
+    (historialServidor || []).forEach(h=>{
+      const fechaExtra = h ? normalizarFechaKey(h.fecha || h.Fecha || h.date || h.Date) : "";
+      if(fechaExtra && !filas.some(x=>x.fecha === fechaExtra)){
+        const valor = h.completado ?? h.Completado ?? h.aplicado ?? h.Aplicado ?? h.status ?? h.Status ?? h.estado ?? h.Estado;
+        filas.push({ fecha:fechaExtra, completado:esCompletado(valor) });
+      }
+    });
+
+    filas.sort((a,b)=> b.fecha.localeCompare(a.fecha));
+    return filas;
+  }
+
+  return (historialServidor || []).slice().sort((a,b)=> String(b.fecha || "").localeCompare(String(a.fecha || "")));
+}
+
+function calcularDiasRestantesItem(item){
+  if(!item || !item.inicio || !item.diasCicloTotal) return 0;
+
+  const inicio = new Date(item.inicio + "T12:00:00");
+  const hoy = new Date(todayKey() + "T12:00:00");
+  const total = Number(item.diasCicloTotal);
+  if(!total) return 0;
+
+  const fin = new Date(inicio);
+  fin.setDate(fin.getDate() + total - 1);
+
+  const restantes = Math.round((fin - hoy) / 86400000);
+  return Math.max(0, restantes);
+}
+
+function cerrarModal(){
+  document.getElementById("history-modal").style.display = "none";
+}
+
+function cerrarModalSiFondo(event){
+  if(event.target && event.target.id === "history-modal"){
+    cerrarModal();
+  }
+}
+
+async function abrirHistorial(categoria, tiempo, nombre){
+  try{
+    document.getElementById("modal-title").textContent = nombre;
+    document.getElementById("modal-subtitle").textContent = `${getCategoriaLabel(categoria)} · ${TIME_LABEL[tiempo] || tiempo}`;
+    document.getElementById("modal-content").innerHTML = `<div class="history-empty">Cargando historial...</div>`;
+    document.getElementById("history-modal").style.display = "flex";
+
+    const res = await postSheets("getHistorial", { categoria, tiempo, nombre });
+    const historialServidor = res.historial || [];
+
+    const itemActual = todayItems.find(it =>
+      it.categoria === categoria &&
+      it.tiempo === tiempo &&
+      it.nombre === nombre
+    );
+
+    const historial = construirHistorialCompleto(itemActual, historialServidor);
+    const usados = historial.filter(h=>h.completado).length;
+    const duracionTotal = itemActual && itemActual.diasCicloTotal ? Number(itemActual.diasCicloTotal) : historial.length;
+    const pendientes = itemActual && itemActual.diasCicloTotal ? calcularDiasRestantesItem(itemActual) : 0;
+    const pct = duracionTotal ? Math.round(usados / duracionTotal * 100) : 0;
+
+    let html = `
+      <div class="history-stats">
+        <div class="stat-card">
+          <div class="stat-value">${usados}</div>
+          <div class="stat-label">Usados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${pendientes}</div>
+          <div class="stat-label">Días restantes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${pct}%</div>
+          <div class="stat-label">Cumplimiento</div>
+        </div>
+      </div>
+    `;
+
+    if(!historial.length){
+      html += `<div class="history-empty">Todavía no hay historial para este producto.</div>`;
+    }else{
+      historial.forEach(h=>{
+        html += `
+          <div class="history-row">
+            <span>${formatFecha(h.fecha)}</span>
+            <strong>${h.completado ? "✅ Aplicado" : "❌ No aplicado"}</strong>
+          </div>
+        `;
+      });
+    }
+
+    document.getElementById("modal-content").innerHTML = html;
+
+  }catch(e){
+    console.error(e);
+    document.getElementById("modal-content").innerHTML = `<div class="history-empty">Error cargando historial.</div>`;
+  }
+}
+
+async function abrirResumenCategoria(categoria){
+  try{
+    const label = getCategoriaLabel(categoria);
+    const itemsCategoria = todayItems.filter(it => it.categoria === categoria);
+
+    document.getElementById("modal-title").textContent = label;
+    document.getElementById("modal-subtitle").textContent = "Cumplimiento general de la categoría";
+    document.getElementById("modal-content").innerHTML = `<div class="history-empty">Calculando cumplimiento...</div>`;
+    document.getElementById("history-modal").style.display = "flex";
+
+    let totalEsperado = 0;
+    let totalHecho = 0;
+    let totalRestantes = 0;
+    let productosHtml = "";
+
+    for(const it of itemsCategoria){
+      const res = await postSheets("getHistorial", {
+        categoria: it.categoria,
+        tiempo: it.tiempo,
+        nombre: it.nombre
+      });
+
+      const historialServidor = res.historial || [];
+      const historial = construirHistorialCompleto(it, historialServidor);
+      const usados = historial.filter(h=>h.completado).length;
+      const esperado = it.diasCicloTotal ? Number(it.diasCicloTotal) : historial.length;
+      const pendientes = it.diasCicloTotal ? calcularDiasRestantesItem(it) : 0;
+      const pct = esperado ? Math.round(usados / esperado * 100) : 0;
+
+      totalEsperado += esperado;
+      totalHecho += usados;
+      totalRestantes += pendientes;
+
+      productosHtml += `
+        <div class="product-summary-row">
+          <div class="product-summary-top">
+            <span>${escapeHtml(it.nombre)}</span>
+            <span>${pct}%</span>
+          </div>
+          <div class="product-summary-meta">
+            ${usados}/${esperado} completados · ${pendientes} días restantes · ${TIME_LABEL[it.tiempo]}
+          </div>
+        </div>
+      `;
+    }
+
+    const totalPendiente = totalRestantes;
+    const pctGeneral = totalEsperado ? Math.round(totalHecho / totalEsperado * 100) : 0;
+
+    const html = `
+      <div class="history-stats">
+        <div class="stat-card">
+          <div class="stat-value">${totalHecho}</div>
+          <div class="stat-label">Hechos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${totalPendiente}</div>
+          <div class="stat-label">Días restantes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${pctGeneral}%</div>
+          <div class="stat-label">Cumplimiento</div>
+        </div>
+      </div>
+
+      ${productosHtml || `<div class="history-empty">No hay productos activos en esta categoría.</div>`}
+    `;
+
+    document.getElementById("modal-content").innerHTML = html;
+
+  }catch(e){
+    console.error(e);
+    document.getElementById("modal-content").innerHTML = `<div class="history-empty">Error cargando resumen.</div>`;
+  }
+}
+
+function renderItem(it){
+  const doneItem = getCheck(it.categoria, it.tiempo, it.nombre);
+  const badge = it.diasRestantes !== null ? `<span class="badge">faltan ${it.diasRestantes}d</span>` : "";
+  const nota = it.note ? `${escapeHtml(it.note)}` : "";
+  const horario = `<strong>${TIME_LABEL[it.tiempo] || it.tiempo}</strong>`;
+  const metaParts = [horario];
+  if(nota) metaParts.push(nota);
+  const meta = metaParts.join(" · ");
+  const icon = CAT_ICON[it.categoria] || "•";
+
+  const div = document.createElement("div");
+  div.className = "item" + (doneItem ? " done" : "");
+  div.innerHTML = `
+    <div class="item-left" onclick="abrirHistorial('${escapeAttr(it.categoria)}','${escapeAttr(it.tiempo)}','${escapeAttr(it.nombre)}')">
+      <div class="item-icon">${icon}</div>
+      <div class="item-text">
+        <div class="item-name">${escapeHtml(it.nombre)}</div>
+        <div class="item-meta">${meta}${badge}</div>
+      </div>
+    </div>
+    <button class="check" aria-label="Completar"
+      onclick="event.stopPropagation(); toggleCheck('${escapeAttr(it.categoria)}','${escapeAttr(it.tiempo)}','${escapeAttr(it.nombre)}')">✓</button>
+  `;
   return div;
 }
 
-function getProgressMood(pct){ if(pct>=90)return"Listo"; if(pct>=70)return"Casi listo"; if(pct>=30)return"Buen ritmo"; if(pct>0)return"Arrancando"; return"Por empezar"; }
-function setActiveTabs(){ ["hoy","historico","periodo"].forEach(m=>document.getElementById("tab-"+m).classList.toggle("active",viewMode===m)); document.getElementById("time-filter").classList.toggle("hidden",viewMode==="periodo"); document.getElementById("main-title").textContent=viewMode==="periodo"?"Periodo":"Hoy"; }
 
-function renderList(items, mode){ const cont=document.getElementById("categories-container"); cont.innerHTML=""; if(!items.length){ cont.innerHTML=`<div class="empty">Nada para mostrar.</div>`; return; } groupByCategoria(items).forEach(grupo=>{ const wrapper=document.createElement("div"); wrapper.className="category-group"; const catId=cleanId(mode+"-"+selectedTiempo+"-"+grupo.categoria); if(openCategories[catId]===undefined) openCategories[catId]=false; const doneCat= mode==="historico" ? grupo.items.reduce((a,it)=>a+totalUsedForItem(it),0) : grupo.items.filter(it=>getCheck(it.categoria,it.tiempo,it.nombre)).length; const totalCat= mode==="historico" ? grupo.items.reduce((a,it)=>a+(it.diasCicloTotal?Number(it.diasCicloTotal):Math.max(totalUsedForItem(it),0)),0) : grupo.items.length; const header=document.createElement("div"); header.className="category-header"; header.onclick=()=>toggleCategoria(catId); header.innerHTML=`<div class="category-title"><span class="category-caret" id="cat-caret-${catId}">${openCategories[catId]?"⌄":"›"}</span><span class="category-icon">${getCategoriaIcon(grupo.categoria)}</span><span>${escapeHtml(getCategoriaLabel(grupo.categoria))}</span></div><span class="category-count">${doneCat}/${totalCat}</span>`; wrapper.appendChild(header); const body=document.createElement("div"); body.className="category-body"; body.id="cat-body-"+catId; body.style.display=openCategories[catId]?"block":"none"; grupo.items.forEach(it=>body.appendChild(renderItem(it,mode))); wrapper.appendChild(body); cont.appendChild(wrapper); }); }
-
-function renderToday(){ document.getElementById("period-panel").classList.add("hidden"); document.getElementById("summary-card").classList.remove("hidden"); document.getElementById("date").textContent=localDateText(); currentItems=flattenPlan(false); const visible=selectedTiempo==="todo"?currentItems:currentItems.filter(it=>it.tiempo===selectedTiempo); const done=visible.filter(it=>getCheck(it.categoria,it.tiempo,it.nombre)).length, total=visible.length, pct=total?Math.round(done/total*100):0; document.getElementById("summary-title").textContent="Progreso del día"; document.getElementById("pct").textContent=pct+"% · "+getProgressMood(pct); document.getElementById("fill").style.width=pct+"%"; document.getElementById("done-count").textContent=`${done}/${total} completados`; document.getElementById("pending-count").textContent=`${Math.max(0,total-done)} pendientes`; renderList(visible,"hoy"); }
-
-function renderHistorico(){ document.getElementById("period-panel").classList.add("hidden"); document.getElementById("summary-card").classList.remove("hidden"); document.getElementById("date").textContent="Histórico de uso"; currentItems=flattenPlan(true); const visible=selectedTiempo==="todo"?currentItems:currentItems.filter(it=>it.tiempo===selectedTiempo); let used=0, expected=0; visible.forEach(it=>{ used+=totalUsedForItem(it); expected+=it.diasCicloTotal?Number(it.diasCicloTotal):Math.max(totalUsedForItem(it),0); }); const pct=expected?Math.round(used/expected*100):0; document.getElementById("summary-title").textContent="Resumen histórico"; document.getElementById("pct").textContent=pct+"% · Histórico"; document.getElementById("fill").style.width=pct+"%"; document.getElementById("done-count").textContent=`${used}/${expected} usos registrados`; document.getElementById("pending-count").textContent=`${Math.max(0,expected-used)} pendientes/fallados`; renderList(visible,"historico"); }
-
-function getPeriodRange(){ const hoy=new Date(todayKey()+"T12:00:00"); let start,end=todayKey(); if(periodPreset==="7"){ const d=new Date(hoy); d.setDate(d.getDate()-6); start=dateKey(d); } else if(periodPreset==="30"){ const d=new Date(hoy); d.setDate(d.getDate()-29); start=dateKey(d); } else if(periodPreset==="custom"){ start=document.getElementById("period-start")?.value || end; end=document.getElementById("period-end")?.value || end; } else { const d=new Date(hoy.getFullYear(),hoy.getMonth(),1); start=dateKey(d); } if(start>end){ const tmp=start; start=end; end=tmp; } return {start,end}; }
-function calcPeriod(){ const {start,end}=getPeriodRange(); const items=flattenPlan(true); const itemStats=items.map(it=>{ const esperado=expectedForItem(it,start,end), usado=usedCountForItem(it,start,end), pct=esperado?Math.round(usado/esperado*100):0; return {...it, esperado, usado, pct}; }).filter(x=>x.esperado>0 || x.usado>0); const totalEsp=itemStats.reduce((a,x)=>a+x.esperado,0), totalUso=itemStats.reduce((a,x)=>a+x.usado,0), pct=totalEsp?Math.round(totalUso/totalEsp*100):0; return {start,end,itemStats,totalEsp,totalUso,pct}; }
-function insightText(stats){ const byCat={}; const byTime={}; stats.itemStats.forEach(x=>{ if(!byCat[x.categoria]) byCat[x.categoria]={u:0,e:0}; byCat[x.categoria].u+=x.usado; byCat[x.categoria].e+=x.esperado; if(!byTime[x.tiempo]) byTime[x.tiempo]={u:0,e:0}; byTime[x.tiempo].u+=x.usado; byTime[x.tiempo].e+=x.esperado; }); const cats=Object.entries(byCat).map(([k,v])=>({k,p:v.e?Math.round(v.u/v.e*100):0,u:v.u,e:v.e})).sort((a,b)=>a.p-b.p); const times=Object.entries(byTime).map(([k,v])=>({k,p:v.e?Math.round(v.u/v.e*100):0,u:v.u,e:v.e})).sort((a,b)=>a.p-b.p); let lines=[]; if(cats.length){ lines.push(`Categoría más débil: ${getCategoriaLabel(cats[0].k)} (${cats[0].p}%).`); lines.push(`Categoría más fuerte: ${getCategoriaLabel(cats[cats.length-1].k)} (${cats[cats.length-1].p}%).`); } if(times.length) lines.push(`Horario más débil: ${TIME_LABEL[times[0].k]} (${times[0].p}%).`); if(stats.pct>=80) lines.push("Alta adherencia: los cambios del periodo sí son evaluables."); else if(stats.pct>=50) lines.push("Adherencia parcial: los cambios se pueden analizar con cautela."); else lines.push("Adherencia baja: si no hubo mejora, puede deberse a falta de constancia."); return lines; }
-
-function renderPeriodo(){
-  document.getElementById("summary-card").classList.add("hidden"); document.getElementById("categories-container").innerHTML=""; document.getElementById("date").textContent="Acciones + evidencia";
-  const panel=document.getElementById("period-panel"); panel.classList.remove("hidden");
-  const stats=calcPeriod(); const top=stats.itemStats.slice().sort((a,b)=>b.p-a.p).slice(0,4); const low=stats.itemStats.slice().filter(x=>x.esperado>0).sort((a,b)=>a.p-b.p).slice(0,4); const insights=insightText(stats);
-  const catOptions=Object.keys(CAT_LABEL).filter((v,i,a)=>a.indexOf(v)===i).map(c=>`<option value="${c}">${getCategoriaLabel(c)}</option>`).join("");
-  const evoHtml=evoluciones.slice(0,5).map(e=>`<div class="evo-row"><div class="evo-row-top"><span>${escapeHtml(getCategoriaLabel(e.categoria)||e.categoria)}</span><span>${escapeHtml(e.score||"")}/10</span></div><div class="evo-row-meta">${formatFecha(e.fecha_inicio)} – ${formatFecha(e.fecha_fin)}<br>${escapeHtml(e.nota||"")}</div>${(e.foto_inicio_url||e.foto_fin_url)?`<div class="photo-pair">${e.foto_inicio_url?`<img src="${escapeAttr(e.foto_inicio_url)}" alt="Foto inicio">`:`<div></div>`}${e.foto_fin_url?`<img src="${escapeAttr(e.foto_fin_url)}" alt="Foto fin">`:`<div></div>`}</div>`:""}</div>`).join("");
-  panel.innerHTML=`
-    <div class="section-card">
-      <div class="section-title">Reporte del periodo</div>
-      <div class="period-controls"><select id="period-preset" onchange="periodPreset=this.value;localStorage.setItem('periodPreset',periodPreset);render()"><option value="mes" ${periodPreset==='mes'?'selected':''}>Este mes</option><option value="7" ${periodPreset==='7'?'selected':''}>Últimos 7 días</option><option value="30" ${periodPreset==='30'?'selected':''}>Últimos 30 días</option><option value="custom" ${periodPreset==='custom'?'selected':''}>Rango</option></select><input id="period-start" type="date" value="${stats.start}" onchange="periodPreset='custom';document.getElementById('period-preset').value='custom';render()"><input id="period-end" type="date" value="${stats.end}" onchange="periodPreset='custom';document.getElementById('period-preset').value='custom';render()"></div>
-      <div class="history-stats"><div class="stat-card"><div class="stat-value">${stats.pct}%</div><div class="stat-label">Cumplimiento</div></div><div class="stat-card"><div class="stat-value">${stats.totalUso}</div><div class="stat-label">Usos</div></div><div class="stat-card"><div class="stat-value">${Math.max(0,stats.totalEsp-stats.totalUso)}</div><div class="stat-label">Faltantes</div></div></div>
-      <div class="insight-box"><strong>Lectura rápida</strong>${insights.map(x=>`<div>• ${escapeHtml(x)}</div>`).join("")}</div>
-    </div>
-    <div class="section-card"><div class="section-title">Top cumplidos</div>${top.length?top.map(x=>`<div class="period-row"><div class="period-row-top"><span>${escapeHtml(x.nombre)}</span><span>${x.pct}%</span></div><div class="period-row-meta">${getCategoriaLabel(x.categoria)} · ${TIME_LABEL[x.tiempo]} · ${x.usado}/${x.esperado} usos</div></div>`).join(""):`<div class="empty">Sin datos.</div>`}</div>
-    <div class="section-card"><div class="section-title">Dónde se cayó la rutina</div>${low.length?low.map(x=>`<div class="period-row"><div class="period-row-top"><span>${escapeHtml(x.nombre)}</span><span>${x.pct}%</span></div><div class="period-row-meta">${getCategoriaLabel(x.categoria)} · ${TIME_LABEL[x.tiempo]} · ${x.usado}/${x.esperado} usos</div></div>`).join(""):`<div class="empty">Sin datos.</div>`}</div>
-    <div class="section-card"><div class="section-title">Evidencia / evolución</div><div class="evo-form"><input id="evo-start" type="date" value="${stats.start}"><input id="evo-end" type="date" value="${stats.end}"><select id="evo-cat">${catOptions}</select><input id="evo-score" type="number" min="1" max="10" placeholder="Score 1–10"><input id="evo-foto-inicio" placeholder="URL foto inicio"><input id="evo-foto-fin" placeholder="URL foto fin"><textarea id="evo-nota" placeholder="Nota corta: cambios observados, síntomas, dudas para especialista..."></textarea><button class="small-btn" onclick="guardarEvolucion()">Guardar evolución</button></div></div>
-    <div class="section-card"><div class="section-title">Evoluciones guardadas</div>${evoHtml||`<div class="empty">Todavía no hay evidencia guardada.</div>`}</div>`;
+function getRitmoMensaje(pct){
+  if(pct >= 80){
+    return "Traes muy buen ritmo. Sigue así, aquí es donde empiezan los resultados.";
+  }
+  if(pct >= 50){
+    return "Vas agarrando ritmo. Ya hay avance, ahora toca sostenerlo.";
+  }
+  return "Aún no agarras ritmo. Empieza simple, lo importante es moverte.";
 }
 
-function render(){ setActiveTabs(); if(viewMode==="hoy") renderToday(); else if(viewMode==="historico") renderHistorico(); else renderPeriodo(); }
+function getRitmoEstado(pct){
+  if(pct >= 80) return "Traes muy buen ritmo";
+  if(pct >= 50) return "Vas agarrando ritmo";
+  return "Aún no agarras ritmo";
+}
 
-async function toggleCheck(categoria,tiempo,nombre){ try{ const current=getCheck(categoria,tiempo,nombre); checksObj[categoria]=checksObj[categoria]||{}; checksObj[categoria][tiempo]=checksObj[categoria][tiempo]||{}; checksObj[categoria][tiempo][nombre]=!current; render(); await postSheets("saveCheck",{fecha:todayKey(),categoria,tiempo,nombre,completado:!current}); const [checksRes, allChecksRes]=await Promise.all([postSheets("getChecks",{fecha:todayKey()}),postSheets("getAllChecks")]); checksObj=checksRes.checks||checksObj; allChecks=allChecksRes.checks||allChecks; setStatus("Sincronizado","ok"); render(); }catch(e){ console.error(e); setStatus("Error guardando","err"); showError(e.message||String(e)); await cargar(); } }
+function setRitmoPeriodo(periodo){
+  ritmoPeriodo = periodo || "mes";
+  localStorage.setItem("ritmoPeriodoV1", ritmoPeriodo);
+  cargarRitmoReport();
+}
 
-function cerrarModal(){ document.getElementById("history-modal").style.display="none"; }
-function cerrarModalSiFondo(event){ if(event.target && event.target.id==="history-modal") cerrarModal(); }
-async function abrirHistorial(categoria,tiempo,nombre){ try{ document.getElementById("modal-title").textContent=nombre; document.getElementById("modal-subtitle").textContent=`${getCategoriaLabel(categoria)} · ${TIME_LABEL[tiempo]||tiempo}`; document.getElementById("modal-content").innerHTML=`<div class="history-empty">Cargando historial...</div>`; document.getElementById("history-modal").style.display="flex"; const res=await postSheets("getHistorial",{categoria,tiempo,nombre}); const historial=res.historial||[]; const item=flattenPlan(true).find(it=>same(it.categoria,categoria)&&same(it.tiempo,tiempo)&&same(it.nombre,nombre)); const usados=historial.filter(h=>h.completado).length; const duracion=item&&item.diasCicloTotal?Number(item.diasCicloTotal):Math.max(usados,historial.length); const pendientes=duracion?Math.max(0,duracion-usados):0; const pct=duracion?Math.round(usados/duracion*100):0; let html=`<div class="history-stats"><div class="stat-card"><div class="stat-value">${usados}</div><div class="stat-label">Usados</div></div><div class="stat-card"><div class="stat-value">${pendientes}</div><div class="stat-label">Pendientes</div></div><div class="stat-card"><div class="stat-value">${pct}%</div><div class="stat-label">Cumplimiento</div></div></div>`; if(!historial.length) html+=`<div class="history-empty">Todavía no hay historial para este item.</div>`; else historial.forEach(h=>{ if(h.completado) html+=`<div class="history-row"><span>${formatFecha(h.fecha)}</span><strong>✅ Aplicado</strong></div>`; }); document.getElementById("modal-content").innerHTML=html; }catch(e){ console.error(e); document.getElementById("modal-content").innerHTML=`<div class="history-empty">Error cargando historial.</div>`; } }
+async function cargarRitmoReport(){
+  try{
+    const res = await postSheets("getRitmoReport", { periodo: ritmoPeriodo });
+    ritmoReport = res.report || null;
+    render();
+  }catch(e){
+    console.error(e);
+    showError(e.message || String(e));
+  }
+}
 
-async function guardarEvolucion(){ try{ const data={fecha_inicio:document.getElementById("evo-start").value,fecha_fin:document.getElementById("evo-end").value,categoria:document.getElementById("evo-cat").value,score:document.getElementById("evo-score").value,foto_inicio_url:document.getElementById("evo-foto-inicio").value,foto_fin_url:document.getElementById("evo-foto-fin").value,nota:document.getElementById("evo-nota").value}; await postSheets("saveEvolucion",data); const evoRes=await postSheets("getEvoluciones"); evoluciones=evoRes.evoluciones||[]; setStatus("Evolución guardada","ok"); renderPeriodo(); }catch(e){ console.error(e); setStatus("Error guardando","err"); showError(e.message||String(e)); } }
+function pctClass(pct){
+  if(pct >= 80) return "";
+  if(pct >= 50) return "mid";
+  return "low";
+}
 
+function renderRitmoReport(cont){
+  const r = ritmoReport;
+  const periodLabel = r && r.periodoLabel ? r.periodoLabel : "Este mes";
+
+  let html = `
+    <div class="ritmo-controls">
+      <button class="ritmo-pill ${ritmoPeriodo === "7d" ? "active" : ""}" onclick="setRitmoPeriodo('7d')">7 días</button>
+      <button class="ritmo-pill ${ritmoPeriodo === "mes" ? "active" : ""}" onclick="setRitmoPeriodo('mes')">Este mes</button>
+      <button class="ritmo-pill ${ritmoPeriodo === "mes_anterior" ? "active" : ""}" onclick="setRitmoPeriodo('mes_anterior')">Mes anterior</button>
+    </div>
+  `;
+
+  if(!r){
+    cont.innerHTML = html + `<div class="ritmo-empty">Cargando tu ritmo...</div>`;
+    return;
+  }
+
+  const cats = (r.categorias || []).slice(0,6);
+  const productos = (r.productos || []).slice(0,20);
+
+  html += `
+    <div class="ritmo-card">
+      <div class="ritmo-insight">
+        ${escapeHtml(getRitmoEstado(r.pct || 0))}. ${escapeHtml(r.insight || "Tu ritmo te ayuda a entender si estás creando las condiciones para ver cambios.")}
+      </div>
+    </div>
+
+    <div class="ritmo-card">
+      <div class="ritmo-card-title">Por categoría · ${escapeHtml(periodLabel)}</div>
+      ${cats.length ? cats.map(c=>`
+        <div class="ritmo-row">
+          <div class="ritmo-row-left"><span class="ritmo-dot ${pctClass(c.pct || 0)}"></span>${escapeHtml(c.label || c.categoria)}</div>
+          <div class="ritmo-value">${c.pct || 0}%</div>
+        </div>
+      `).join("") : `<div class="ritmo-empty">Todavía no hay datos suficientes.</div>`}
+    </div>
+
+    <div class="ritmo-mini-grid">
+      <div class="ritmo-mini">
+        <div class="ritmo-mini-label">Más fuerte</div>
+        <div class="ritmo-mini-value">${escapeHtml(r.fuerte || "-")}</div>
+      </div>
+      <div class="ritmo-mini">
+        <div class="ritmo-mini-label">A reforzar</div>
+        <div class="ritmo-mini-value">${escapeHtml(r.debil || "-")}</div>
+      </div>
+      <div class="ritmo-mini">
+        <div class="ritmo-mini-label">Mejor horario</div>
+        <div class="ritmo-mini-value">${escapeHtml(r.mejorHorario || "-")}</div>
+      </div>
+      <div class="ritmo-mini">
+        <div class="ritmo-mini-label">Horario débil</div>
+        <div class="ritmo-mini-value">${escapeHtml(r.horarioDebil || "-")}</div>
+      </div>
+    </div>
+
+    <button class="ritmo-detail-btn" onclick="document.getElementById('ritmo-detail').classList.toggle('open')">Ver detalle de productos</button>
+
+    <div class="ritmo-detail" id="ritmo-detail">
+      <div class="ritmo-card">
+        <div class="ritmo-card-title">Productos usados en este periodo</div>
+        ${productos.length ? productos.map(p=>`
+          <div class="product-summary-row" onclick="abrirHistorial('${escapeAttr(p.categoria)}','${escapeAttr(p.tiempo)}','${escapeAttr(p.nombre)}')">
+            <div class="product-summary-top">
+              <span>${escapeHtml(p.nombre)}</span>
+              <span>${p.usados}/${p.esperados || p.usados}</span>
+            </div>
+            <div class="product-summary-meta">
+              ${escapeHtml(p.categoriaLabel || p.categoria)} · ${escapeHtml(TIME_LABEL[p.tiempo] || p.tiempo)} · ${p.pct !== null && p.pct !== undefined ? p.pct + "%" : p.usados + " usos"}
+            </div>
+          </div>
+        `).join("") : `<div class="ritmo-empty">No hay productos registrados en este periodo.</div>`}
+      </div>
+      <div class="ritmo-card">
+        <div class="note">Este reporte no dice que una acción causó una mejora. Te muestra qué hiciste durante el periodo para que puedas interpretar mejor tus cambios y compartirlo con un especialista.</div>
+      </div>
+    </div>
+  `;
+
+  cont.innerHTML = html;
+}
+
+function getProgressMood(pct){
+  if(pct >= 90) return "Listo";
+  if(pct >= 70) return "Casi listo";
+  if(pct >= 30) return "Buen ritmo";
+  if(pct > 0) return "Arrancando";
+  return "Por empezar";
+}
+
+function render(){
+  document.getElementById("date").textContent = viewMode === "ritmo" ? "¿Qué ritmo traes?" : localDateText();
+  syncViewModeUI();
+
+  const cont = document.getElementById("categories-container");
+  const filter = document.getElementById("time-filter");
+  const note = document.getElementById("filter-note");
+
+  if(filter){
+    filter.value = selectedTiempo;
+    filter.style.display = viewMode === "ritmo" ? "none" : "block";
+  }
+  if(cont) cont.innerHTML = "";
+
+  if(viewMode === "ritmo"){
+    const r = ritmoReport;
+    const pct = r && r.esperados ? Number(r.pct || 0) : 0;
+    document.getElementById("summary-title").textContent = "Ritmo";
+    document.getElementById("pct").textContent = r && r.esperados ? pct + "%" : "—";
+    document.getElementById("ritmo-msg").textContent = r && r.esperados ? getRitmoMensaje(pct) : "Todavía no hay datos suficientes para leer tu ritmo.";
+    document.getElementById("fill").style.width = r && r.esperados ? pct + "%" : "0%";
+    document.getElementById("done-count").textContent = r && r.esperados ? `${r.usados}/${r.esperados} acciones` : "Sin datos";
+    document.getElementById("pending-count").textContent = r && r.esperados ? `${r.pendientes} por reforzar` : "";
+    if(note) note.textContent = "";
+    renderRitmoReport(cont);
+    return;
+  }
+
+  document.getElementById("summary-title").textContent = "Ritmo de hoy";
+
+  todayItems = flattenPlan();
+
+  let total = todayItems.length;
+  let done = todayItems.filter(it => getCheck(it.categoria, it.tiempo, it.nombre)).length;
+  let pct = total ? Math.round(done / total * 100) : 0;
+
+  document.getElementById("pct").textContent = pct + "%";
+  document.getElementById("ritmo-msg").textContent = getRitmoMensaje(pct);
+  document.getElementById("fill").style.width = pct + "%";
+  document.getElementById("done-count").textContent = `${done}/${total} completados`;
+  document.getElementById("pending-count").textContent = `${Math.max(0,total-done)} pendientes`;
+
+  const visibleItems = selectedTiempo === "todo"
+    ? todayItems
+    : todayItems.filter(it => it.tiempo === selectedTiempo);
+
+  const visibleDone = visibleItems.filter(it => getCheck(it.categoria, it.tiempo, it.nombre)).length;
+  if(note){
+    if(selectedTiempo === "todo"){
+      note.textContent = visibleItems.length
+        ? `Mostrando ${visibleDone}/${visibleItems.length} actividades de hoy por categoría.`
+        : "No hay actividades programadas para hoy.";
+    }else{
+      note.textContent = visibleItems.length
+        ? `Mostrando ${visibleDone}/${visibleItems.length} actividades de ${TIME_LABEL[selectedTiempo].toLowerCase()}.`
+        : `No hay actividades programadas para ${TIME_LABEL[selectedTiempo].toLowerCase()}.`;
+    }
+  }
+
+  if(!visibleItems.length){
+    cont.innerHTML = `<div class="empty">Nada programado en esta vista.</div>`;
+    return;
+  }
+
+  const grupos = groupByCategoria(visibleItems);
+
+  grupos.forEach(grupo=>{
+    const wrapper = document.createElement("div");
+    wrapper.className = "category-group";
+
+    if(grupo.categoria !== "__sin_categoria__"){
+      const catId = cleanId("vista-" + selectedTiempo + "-" + grupo.categoria);
+
+      if(openCategories[catId] === undefined){
+        openCategories[catId] = false;
+      }
+
+      const doneCat = grupo.items.filter(it => getCheck(it.categoria, it.tiempo, it.nombre)).length;
+
+      const header = document.createElement("div");
+      header.className = "category-header";
+      header.onclick = () => toggleCategoria(catId);
+      header.innerHTML = `
+        <div class="category-title">
+          <span class="category-caret" id="cat-caret-${catId}">${openCategories[catId] ? "⌄" : "›"}</span>
+          <span class="category-icon">${getCategoriaIcon(grupo.categoria)}</span>
+          <span>${escapeHtml(getCategoriaLabel(grupo.categoria))}</span>
+        </div>
+        <div class="category-actions">
+          <span class="category-count">${doneCat}/${grupo.items.length}</span>
+        </div>
+      `;
+      wrapper.appendChild(header);
+
+      const body = document.createElement("div");
+      body.className = "category-body";
+      body.id = "cat-body-" + catId;
+      body.style.display = openCategories[catId] ? "block" : "none";
+
+      grupo.items.forEach(it=>{
+        body.appendChild(renderItem(it));
+      });
+
+      wrapper.appendChild(body);
+    }else{
+      grupo.items.forEach(it=>{
+        wrapper.appendChild(renderItem(it));
+      });
+    }
+
+    cont.appendChild(wrapper);
+  });
+
+  saveOpenCategories();
+}
+
+async function toggleCheck(categoria, tiempo, nombre){
+  try{
+    const current = getCheck(categoria, tiempo, nombre);
+    if(!checksObj[categoria]) checksObj[categoria] = {};
+    if(!checksObj[categoria][tiempo]) checksObj[categoria][tiempo] = {};
+    checksObj[categoria][tiempo][nombre] = !current;
+    render();
+
+    await postSheets("saveCheck", {
+      fecha: todayKey(),
+      categoria,
+      tiempo,
+      nombre,
+      completado: !current
+    });
+
+    // Releer checks después de guardar para confirmar que quedó sincronizado
+    const checksRes = await postSheets("getChecks", { fecha: todayKey() });
+    checksObj = checksRes.checks || checksObj;
+    setStatus("Sincronizado", "ok");
+    render();
+  }catch(e){
+    console.error(e);
+    setStatus("Error guardando", "err");
+    showError(e.message || String(e));
+    await cargar();
+  }
+}
+
+initOpenSections();
 cargar();
 </script>
 </body>
