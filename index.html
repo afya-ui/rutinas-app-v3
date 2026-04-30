@@ -749,6 +749,7 @@ function flattenPlan(){
             tiempo,
             nombre,
             note: cfg.note || cfg.nota || "",
+            inicio: cfg.inicio || "",
             diasRestantes: cfg.diasCiclo ? getDiasRestantes(cfg) : null,
             diasCicloTotal: cfg.diasCiclo || null
           });
@@ -764,6 +765,7 @@ function flattenPlan(){
         tiempo,
         nombre:w.nombre,
         note:w.note || "",
+        inicio:"",
         diasRestantes:null,
         diasCicloTotal:null
       });
@@ -826,6 +828,49 @@ function formatFecha(fecha){
   return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 
+function addDaysKey(fechaKey, dias){
+  const d = new Date(fechaKey + "T12:00:00");
+  d.setDate(d.getDate() + dias);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+function normalizarHistorial(historial){
+  const mapa = {};
+  (historial || []).forEach(h=>{
+    if(!h || !h.fecha) return;
+    mapa[h.fecha] = !!h.completado;
+  });
+  return mapa;
+}
+
+function construirHistorialCompleto(itemActual, historialServidor){
+  const mapa = normalizarHistorial(historialServidor);
+
+  if(itemActual && itemActual.inicio && itemActual.diasCicloTotal){
+    const total = Number(itemActual.diasCicloTotal);
+    const hoy = todayKey();
+    const filas = [];
+
+    for(let i = 0; i < total; i++){
+      const fecha = addDaysKey(itemActual.inicio, i);
+      if(fecha > hoy) break;
+      filas.push({ fecha, completado: !!mapa[fecha] });
+    }
+
+    (historialServidor || []).forEach(h=>{
+      if(h && h.fecha && !filas.some(x=>x.fecha === h.fecha)){
+        filas.push({ fecha:h.fecha, completado:!!h.completado });
+      }
+    });
+
+    filas.sort((a,b)=> b.fecha.localeCompare(a.fecha));
+    return filas;
+  }
+
+  return (historialServidor || []).slice().sort((a,b)=> String(b.fecha || "").localeCompare(String(a.fecha || "")));
+}
+
+
 function cerrarModal(){
   document.getElementById("history-modal").style.display = "none";
 }
@@ -844,7 +889,7 @@ async function abrirHistorial(categoria, tiempo, nombre){
     document.getElementById("history-modal").style.display = "flex";
 
     const res = await postSheets("getHistorial", { categoria, tiempo, nombre });
-    const historial = res.historial || [];
+    const historialServidor = res.historial || [];
 
     const itemActual = todayItems.find(it =>
       it.categoria === categoria &&
@@ -852,8 +897,9 @@ async function abrirHistorial(categoria, tiempo, nombre){
       it.nombre === nombre
     );
 
+    const historial = construirHistorialCompleto(itemActual, historialServidor);
     const usados = historial.filter(h=>h.completado).length;
-    const duracionTotal = itemActual && itemActual.diasCicloTotal ? itemActual.diasCicloTotal : historial.length;
+    const duracionTotal = itemActual && itemActual.diasCicloTotal ? Number(itemActual.diasCicloTotal) : historial.length;
     const pendientes = Math.max(0, duracionTotal - usados);
     const pct = duracionTotal ? Math.round(usados / duracionTotal * 100) : 0;
 
@@ -916,7 +962,8 @@ async function abrirResumenCategoria(categoria){
         nombre: it.nombre
       });
 
-      const historial = res.historial || [];
+      const historialServidor = res.historial || [];
+      const historial = construirHistorialCompleto(it, historialServidor);
       const usados = historial.filter(h=>h.completado).length;
       const esperado = it.diasCicloTotal ? Number(it.diasCicloTotal) : historial.length;
       const pendientes = Math.max(0, esperado - usados);
