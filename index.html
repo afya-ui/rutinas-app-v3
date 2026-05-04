@@ -880,7 +880,10 @@ h1{
       <label>Nota</label>
       <textarea id="p-nota" placeholder="Ej. Después del desayuno"></textarea>
 
-      <button onclick="guardarProducto()">Guardar producto</button>
+      <button id="save-product-btn" onclick="guardarProducto()">Guardar producto</button>
+
+<button id="delete-product-btn" style="display:none; background:#fff; color:#8a1f1f; border:1px solid rgba(226,75,74,.35);"
+  onclick="quitarProductoDesdeModal()">Quitar producto</button>
     </div>
   </div>
 </div>
@@ -956,6 +959,7 @@ let ritmoPeriodo = localStorage.getItem("ritmoPeriodoV1") || "mes";
 let ritmoReport = null;
 let openSections = {}; // ya no se usa para mostrar secciones, se conserva por compatibilidad local
 let openCategories = {};
+  let editingItem = null;
 
 function pad(n){ return String(n).padStart(2,"0"); }
 
@@ -1550,7 +1554,7 @@ const meta = metaParts.join(" · ");
     </div>
     <div style="display:flex; gap:8px; align-items:center;">
   <button class="small-btn"
-    onclick="event.stopPropagation(); inactivarProducto('${escapeAttr(it.categoria)}','${escapeAttr(it.tiempo)}','${escapeAttr(it.nombre)}')">Editar</button>
+  onclick="event.stopPropagation(); abrirEditarProducto('${escapeAttr(it.categoria)}','${escapeAttr(it.tiempo)}','${escapeAttr(it.nombre)}')">Editar</button>
 
   <button class="check" aria-label="Completar"
     onclick="event.stopPropagation(); toggleCheck('${escapeAttr(it.categoria)}','${escapeAttr(it.tiempo)}','${escapeAttr(it.nombre)}')">✓</button>
@@ -2009,8 +2013,68 @@ cargarClima();
 
 function closeAddModal(){
   document.getElementById("add-modal").style.display = "none";
+  resetAddModal();
+}
+function abrirEditarProducto(categoria, tiempo, nombre){
+  const item = todayItems.find(it =>
+    it.categoria === categoria &&
+    it.tiempo === tiempo &&
+    it.nombre === nombre
+  );
+
+  if(!item){
+    alert("No encontré el producto para editar.");
+    return;
+  }
+
+  editingItem = { categoria, tiempo, nombre };
+
+  document.querySelector("#add-modal .modal-title").textContent = "Editar producto";
+  document.querySelector("#add-modal .modal-subtitle").textContent = "Modifica los datos del producto";
+
+  document.getElementById("p-nombre").value = item.nombre;
+  document.getElementById("p-categoria").value = item.categoria;
+  document.getElementById("p-horario").value = item.tiempo;
+  document.getElementById("p-nota").value = item.note || "";
+  document.getElementById("p-inicio").value = item.inicio || "";
+  document.getElementById("p-duracion").value = item.diasCicloTotal || "";
+
+  document.getElementById("save-product-btn").textContent = "Guardar cambios";
+  document.getElementById("delete-product-btn").style.display = "block";
+
+  openAddModal();
 }
 
+function resetAddModal(){
+  editingItem = null;
+
+  document.querySelector("#add-modal .modal-title").textContent = "Agregar producto";
+  document.querySelector("#add-modal .modal-subtitle").textContent = "Crea un nuevo producto para tu rutina";
+
+  document.getElementById("save-product-btn").textContent = "Guardar producto";
+  document.getElementById("delete-product-btn").style.display = "none";
+
+  document.getElementById("p-nombre").value = "";
+  document.getElementById("p-inicio").value = "";
+  document.getElementById("p-duracion").value = "";
+  document.getElementById("p-nota").value = "";
+}
+
+async function quitarProductoDesdeModal(){
+  if(!editingItem) return;
+
+  const ok = confirm(`¿Quieres quitar "${editingItem.nombre}"?\n\nNo se borrará de la base de datos, solo quedará inactivo.`);
+  if(!ok) return;
+
+  try{
+    await postSheets("inactivarProducto", editingItem);
+    closeAddModal();
+    resetAddModal();
+    await cargar();
+  }catch(e){
+    alert("Error: " + e.message);
+  }
+}
 async function guardarProducto(){
   try{
     const data = {
@@ -2025,7 +2089,14 @@ async function guardarProducto(){
       activo: "si"
     };
 
-    await postSheets("addProducto", data);
+    if(editingItem){
+  await postSheets("updateProducto", {
+    original: editingItem,
+    nuevo: data
+  });
+}else{
+  await postSheets("addProducto", data);
+}
 
     alert("Producto guardado");
     closeAddModal();
