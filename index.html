@@ -984,11 +984,12 @@ function weatherIcon(code){
 }
 
 async function cargarClima(){
-  const line = document.getElementById("weather-line");
+  const line = document.getElementById("date-line");
   if(!line) return;
 
   try{
-    line.textContent = "San José del Cabo · cargando clima...";
+    const fecha = localDateText();
+    line.textContent = `${fecha} · cargando clima...`;
 
     const lat = 23.063;
     const lon = -109.703;
@@ -1001,7 +1002,11 @@ async function cargarClima(){
     const temp = Math.round(data.current.temperature_2m);
     const code = data.current.weather_code;
 
-    const fecha = localDateText();
+    line.textContent = `${fecha} · ${temp}°C ${weatherIcon(code)}`;
+  }catch(e){
+    document.getElementById("date-line").textContent = localDateText();
+  }
+}
 document.getElementById("date-line").textContent =
   `${fecha} · ${temp}°C ${weatherIcon(code)}`;
   }catch(e){
@@ -1831,8 +1836,9 @@ function getProgressMood(pct){
 
 function render(){
   document.getElementById("main-title").textContent = viewMode === "ritmo" ? "Mi ritmo" : "Hoy";
-  const fecha = localDateText();
-document.getElementById("date-line").textContent = fecha;
+  if(!document.getElementById("date-line").textContent){
+  document.getElementById("date-line").textContent = localDateText();
+}
 
   const cont = document.getElementById("categories-container");
   const filter = document.getElementById("time-filter");
