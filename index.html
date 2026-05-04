@@ -811,16 +811,6 @@ h1{
   <div class="categories-container" id="categories-container"></div>
 </div>
 
-<div class="modal" id="add-modal">
-  <div class="modal-card">
-    <div class="modal-top">
-      <div>
-        <div class="modal-title">Agregar producto</div>
-        <div class="modal-subtitle">Crea un nuevo producto para tu rutina</div>
-      </div>
-      <button class="modal-close" onclick="closeAddModal()">×</button>
-    </div>
-
     <div class="add-form">
       <label>Nombre</label>
       <input id="p-nombre" placeholder="Ej. Doxiciclina 100 mg" />
@@ -1969,18 +1959,5 @@ async function guardarProducto(){
   }
 }
 </script>
-
-    <input id="p-nombre" placeholder="Nombre" />
-    <input id="p-categoria" placeholder="Categoría" />
-    <input id="p-frecuencia" placeholder="Frecuencia (ej: 24h)" />
-    <input id="p-horario" placeholder="Horario (mañana,tarde,noche)" />
-    <input id="p-dias" placeholder="Días (todos o lunes, martes...)" />
-    <input id="p-inicio" placeholder="Inicio (YYYY-MM-DD)" />
-    <input id="p-duracion" placeholder="Duración días" />
-    <input id="p-nota" placeholder="Nota" />
-
-    <button onclick="guardarProducto()">Guardar</button>
-  </div>
-</div>
 </body>
 </html>
