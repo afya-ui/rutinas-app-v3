@@ -771,7 +771,7 @@ h1{
     <div>
       <h1 id="main-title">Hoy</h1>
       <div class="date" id="date"></div>
-<div class="date" id="weather-line">Ubicación y clima...</div>
+<div class="date" id="weather-line">San José del Cabo</div>
       <div class="status"><span class="dot" id="status-dot"></span><span id="status">Cargando...</span></div>
     </div>
     <div class="top-actions">
@@ -988,30 +988,24 @@ async function cargarClima(){
   const line = document.getElementById("weather-line");
   if(!line) return;
 
-  if(!navigator.geolocation){
-    line.textContent = "Clima no disponible";
-    return;
+  try{
+    line.textContent = "San José del Cabo · cargando clima...";
+
+    const lat = 23.063;
+    const lon = -109.703;
+
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const temp = Math.round(data.current.temperature_2m);
+    const code = data.current.weather_code;
+
+    line.textContent = `San José del Cabo · ${temp}°C ${weatherIcon(code)}`;
+  }catch(e){
+    line.textContent = "San José del Cabo";
   }
-
-  navigator.geolocation.getCurrentPosition(async pos=>{
-    try{
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`;
-      const res = await fetch(url);
-      const data = await res.json();
-
-      const temp = Math.round(data.current.temperature_2m);
-      const code = data.current.weather_code;
-
-      line.textContent = `Tu ubicación · ${temp}°C ${weatherIcon(code)}`;
-    }catch(e){
-      line.textContent = "Clima no disponible";
-    }
-  }, ()=>{
-    line.textContent = "Activa ubicación para ver clima";
-  });
 }
 function initOpenSections(){
   // Siempre iniciar categorías colapsadas
