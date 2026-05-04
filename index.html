@@ -960,7 +960,9 @@ let ritmoReport = null;
 let openSections = {}; // ya no se usa para mostrar secciones, se conserva por compatibilidad local
 let openCategories = {};
   let editingItem = null;
-
+let productosTerminados = [];
+let restartingItem = null;
+  
 function pad(n){ return String(n).padStart(2,"0"); }
 
 function todayKey(){
@@ -1135,13 +1137,15 @@ async function cargar(){
 
     const fecha = todayKey();
 
-    const [planRes, checksRes] = await Promise.all([
-      postSheets("getPlan"),
-      postSheets("getChecks", { fecha })
-    ]);
+    const [planRes, checksRes, terminadosRes] = await Promise.all([
+  postSheets("getPlan"),
+  postSheets("getChecks", { fecha }),
+  postSheets("getProductosTerminados")
+]);
 
     planObj = planRes.plan || {};
     checksObj = checksRes.checks || {};
+    productosTerminados = terminadosRes.terminados || [];
 
     if(viewMode === "ritmo"){
       try{
@@ -1837,7 +1841,71 @@ function getProgressMood(pct){
   if(pct > 0) return "Arrancando";
   return "Por empezar";
 }
+function renderProductosTerminados(cont){
+  if(selectedTiempo !== "todo") return;
+  if(!productosTerminados || !productosTerminados.length) return;
 
+  const wrapper = document.createElement("div");
+  wrapper.className = "category-group";
+
+  const header = document.createElement("div");
+  header.className = "category-header";
+  header.innerHTML = `
+    <div class="category-title">
+      <span class="category-icon">🔁</span>
+      <span>Ciclos terminados</span>
+    </div>
+    <div class="category-actions">
+      <span class="category-count">${productosTerminados.length}</span>
+    </div>
+  `;
+  wrapper.appendChild(header);
+
+  productosTerminados.forEach(p=>{
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <div class="item-left">
+        <div class="item-icon">🔁</div>
+        <div class="item-text">
+          <div class="item-name">${escapeHtml(p.nombre)}</div>
+          <div class="item-meta">Terminó el ${formatFecha(p.fin)} · duración anterior ${escapeHtml(p.duracion)}d</div>
+        </div>
+      </div>
+      <button class="small-btn"
+        onclick="event.stopPropagation(); abrirReiniciarProducto(${p.rowNumber})">Reiniciar</button>
+    `;
+    wrapper.appendChild(div);
+  });
+
+  cont.appendChild(wrapper);
+}
+
+function abrirReiniciarProducto(rowNumber){
+  const item = productosTerminados.find(p => Number(p.rowNumber) === Number(rowNumber));
+  if(!item) return;
+
+  restartingItem = item;
+  editingItem = null;
+
+  document.querySelector("#add-modal .modal-title").textContent = "Reiniciar ciclo";
+  document.querySelector("#add-modal .modal-subtitle").textContent = "Ajusta inicio, duración, horario y días";
+
+  document.getElementById("p-nombre").value = item.nombre;
+  document.getElementById("p-categoria").value = item.categoria;
+  document.getElementById("p-frecuencia").value = item.frecuencia || "24h";
+  document.getElementById("p-horario").value = item.horario || "mañana";
+  document.getElementById("p-dias").value = item.dias || "todos";
+  document.getElementById("p-inicio").value = todayKey();
+  document.getElementById("p-duracion").value = item.duracion || "";
+  document.getElementById("p-nota").value = item.nota || "";
+
+  document.getElementById("save-product-btn").textContent = "Guardar reinicio";
+  document.getElementById("delete-product-btn").style.display = "none";
+
+  openAddModal();
+}
+  
 function render(){
   document.getElementById("main-title").textContent = viewMode === "ritmo" ? "Mi ritmo" : "Hoy";
   if(!document.getElementById("date-line").textContent){
@@ -1900,9 +1968,10 @@ function render(){
   }
 
   if(!visibleItems.length){
-    cont.innerHTML = `<div class="empty">Nada programado en esta vista.</div>`;
-    return;
-  }
+  cont.innerHTML = `<div class="empty">Nada programado en esta vista.</div>`;
+  renderProductosTerminados(cont);
+  return;
+}
 
   const grupos = groupByCategoria(visibleItems);
 
@@ -1952,7 +2021,7 @@ function render(){
 
     cont.appendChild(wrapper);
   });
-
+renderProductosTerminados(cont);
   saveOpenCategories();
 }
 async function inactivarProducto(categoria, tiempo, nombre){
@@ -2047,19 +2116,9 @@ function abrirEditarProducto(categoria, tiempo, nombre){
 
 function resetAddModal(){
   editingItem = null;
-
-  document.querySelector("#add-modal .modal-title").textContent = "Agregar producto";
-  document.querySelector("#add-modal .modal-subtitle").textContent = "Crea un nuevo producto para tu rutina";
-
-  document.getElementById("save-product-btn").textContent = "Guardar producto";
-  document.getElementById("delete-product-btn").style.display = "none";
-
-  document.getElementById("p-nombre").value = "";
-  document.getElementById("p-inicio").value = "";
-  document.getElementById("p-duracion").value = "";
-  document.getElementById("p-nota").value = "";
+  restartingItem = null;
+  ...
 }
-
 async function quitarProductoDesdeModal(){
   if(!editingItem) return;
 
@@ -2089,11 +2148,23 @@ async function guardarProducto(){
       activo: "si"
     };
 
-    if(editingItem){
+    if(restartingItem){
+  await postSheets("reiniciarProducto", {
+    rowNumber: restartingItem.rowNumber,
+    inicio: data.inicio,
+    duracion: data.duracion,
+    horario: data.horario,
+    dias: data.dias
+  });
+  restartingItem = null;
+}else if(editingItem){
   await postSheets("updateProducto", {
     original: editingItem,
     nuevo: data
   });
+}else{
+  await postSheets("addProducto", data);
+}
 }else{
   await postSheets("addProducto", data);
 }
