@@ -594,6 +594,58 @@ exports.handler = async (event) => {
         body: JSON.stringify({ historial }),
       };
     }
+if (action === "inactivarProducto") {
+  const { nombre, categoria, tiempo } = data || {};
+
+  if (!nombre) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({ error: "Falta nombre del producto" }),
+    };
+  }
+
+  const rows = await readSheet(sheets, "plan!A2:I");
+  let rowNumberToUpdate = null;
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const [n, c, frecuencia, horario] = row;
+
+    const cat = mapCategoria(c);
+    const tiempos = horarioToTiempos(horario, frecuencia);
+
+    if (
+      sameKey(n, nombre) &&
+      sameKey(cat, categoria) &&
+      tiempos.includes(tiempo)
+    ) {
+      rowNumberToUpdate = i + 2;
+      break;
+    }
+  }
+
+  if (!rowNumberToUpdate) {
+    return {
+      statusCode: 404,
+      headers,
+      body: JSON.stringify({ error: "No encontré el producto para inactivar" }),
+    };
+  }
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SHEET_ID,
+    range: `plan!I${rowNumberToUpdate}:I${rowNumberToUpdate}`,
+    valueInputOption: "RAW",
+    requestBody: { values: [["no"]] },
+  });
+
+  return {
+    statusCode: 200,
+    headers,
+    body: JSON.stringify({ ok: true }),
+  };
+}
 if (action === "addProducto") {
   const {
     nombre,
