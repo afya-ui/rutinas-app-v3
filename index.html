@@ -927,12 +927,6 @@ const API = "/.netlify/functions/sheets";
 const TIMES = ["manana","tarde","noche"];
 const TIME_LABEL = { manana:"Mañana", tarde:"Tarde", noche:"Noche" };
 
-const WELLNESS_ITEMS = [
-  { nombre:"Meditación", note:"" },
-  { nombre:"Sauna", note:"" },
-  { nombre:"Hielos", note:"" }
-];
-
 const CAT_LABEL = {
   dermato:"Derma",
   derma:"Derma",
@@ -1255,19 +1249,6 @@ function flattenPlan(){
     });
   });
 
-  TIMES.forEach(tiempo=>{
-    WELLNESS_ITEMS.forEach(w=>{
-      out.push({
-        categoria:"wellness",
-        tiempo,
-        nombre:w.nombre,
-        note:w.note || "",
-        inicio:"",
-        diasRestantes:null,
-        diasCicloTotal:null
-      });
-    });
-  });
 
   out.sort((a,b)=>{
     const catDiff = (CAT_ORDER[a.categoria] || 99) - (CAT_ORDER[b.categoria] || 99);
