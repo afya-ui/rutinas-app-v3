@@ -2122,7 +2122,6 @@ cargarClima();
 function mostrarProductosExistentes(){
   const existentes = [];
 
-  // 🔹 Convertimos planObj en lista plana
   Object.entries(planObj || {}).forEach(([categoria, tiempos])=>{
     Object.entries(tiempos || {}).forEach(([tiempo, productos])=>{
       Object.entries(productos || {}).forEach(([nombre, cfg])=>{
@@ -2144,6 +2143,24 @@ function mostrarProductosExistentes(){
     return;
   }
 
+  const agrupado = {};
+  existentes.forEach(p=>{
+    if(!agrupado[p.categoria]) agrupado[p.categoria] = [];
+    if(!agrupado[p.categoria].some(x => x.nombre === p.nombre)){
+      agrupado[p.categoria].push(p);
+    }
+  });
+
+  const categoriasOrdenadas = Object.keys(agrupado).sort((a,b)=>{
+    return (CAT_ORDER[a] || 99) - (CAT_ORDER[b] || 99);
+  });
+
+  categoriasOrdenadas.forEach(cat=>{
+    agrupado[cat].sort((a,b)=> a.nombre.localeCompare(b.nombre));
+  });
+
+  window.__existentesTemp = [];
+
   let html = `
     <div class="modal" style="display:flex;">
       <div class="modal-card">
@@ -2154,21 +2171,43 @@ function mostrarProductosExistentes(){
           </div>
           <button class="modal-close" onclick="closeExistentes()">×</button>
         </div>
-        <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px;">
+        <div style="display:flex; flex-direction:column; gap:18px; margin-top:16px;">
   `;
 
-  existentes.forEach((p, i)=>{
+  let index = 0;
+
+  categoriasOrdenadas.forEach(cat=>{
+    html += `
+      <div>
+        <div style="font-size:13px; font-weight:900; opacity:.55; margin:4px 0 8px; text-transform:uppercase; letter-spacing:.04em;">
+          ${escapeHtml(getCategoriaLabel(cat))}
+        </div>
+    `;
+
+    agrupado[cat].forEach(p=>{
+      window.__existentesTemp.push(p);
+
+      html += `
+        <button class="small-btn" style="padding:14px; text-align:left; margin-bottom:8px; width:100%;">
+          <span onclick="seleccionarExistente(${index})">${escapeHtml(p.nombre)}</span>
+        </button>
+      `;
+
+      index++;
+    });
+
+    html += `</div>`;
+  });
+
   html += `
-    <button class="small-btn" style="padding:14px; text-align:left;"
-      onclick="seleccionarExistente(${i})">
-      ${escapeHtml(p.nombre)}
-    </button>
+        </div>
+      </div>
+    </div>
   `;
-});
+
   const div = document.createElement("div");
   div.id = "existentes-modal";
   div.innerHTML = html;
-
   document.body.appendChild(div);
 }
 function closeExistentes(){
