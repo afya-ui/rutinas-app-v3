@@ -2120,11 +2120,63 @@ cargarClima();
 }
 
 function mostrarProductosExistentes(){
-  closeAddMenu();
+  const existentes = [];
 
-  const cont = document.getElementById("app");
-  
-  const existentes = [...new Set(planData.map(p => p.nombre))];
+  Object.entries(planObj || {}).forEach(([categoria, tiempos])=>{
+    Object.entries(tiempos || {}).forEach(([tiempo, productos])=>{
+      Object.entries(productos || {}).forEach(([nombre, cfg])=>{
+        existentes.push({
+          nombre,
+          categoria,
+          tiempo,
+          nota: cfg.note || "",
+          inicio: cfg.inicio || "",
+          duracion: cfg.diasCiclo || "",
+          frecuencia: cfg.frecuencia || "24h"
+        });
+      });
+    });
+  });
+
+  if(!existentes.length){
+    alert("No encontré productos existentes.");
+    return;
+  }
+
+  let html = `
+    <div class="modal" style="display:flex;">
+      <div class="modal-card">
+        <div class="modal-top">
+          <div>
+            <div class="modal-title">Producto existente</div>
+            <div class="modal-subtitle">Selecciona uno para activarlo</div>
+          </div>
+          <button class="modal-close" onclick="closeExistentes()">×</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:16px;">
+  `;
+
+  existentes.forEach((p, i)=>{
+    window.__existentesTemp = existentes;
+    html += `
+      <button class="small-btn" style="padding:14px; text-align:left;"
+        onclick="seleccionarExistente(${i})">
+        ${escapeHtml(p.nombre)}
+      </button>
+    `;
+  });
+
+  html += `
+        </div>
+      </div>
+    </div>
+  `;
+
+  const div = document.createElement("div");
+  div.id = "existentes-modal";
+  div.innerHTML = html;
+  document.body.appendChild(div);
+}
 
   let html = `
     <div class="modal" style="display:flex;">
@@ -2165,15 +2217,29 @@ function closeExistentes(){
   if(el) el.remove();
 }
 
-function seleccionarExistente(nombre){
+function seleccionarExistente(index){
   closeExistentes();
 
-  const item = planData.find(p => p.nombre === nombre);
+  const item = window.__existentesTemp[index];
   if(!item) return;
+
+  restartingItem = item;
+  editingItem = null;
+
+  document.querySelector("#add-modal .modal-title").textContent = "Activar producto";
+  document.querySelector("#add-modal .modal-subtitle").textContent = "Ajusta inicio, duración, horario y días";
 
   document.getElementById("p-nombre").value = item.nombre;
   document.getElementById("p-categoria").value = item.categoria;
-  document.getElementById("p-horario").value = item.tiempo;
+  document.getElementById("p-frecuencia").value = item.frecuencia || "24h";
+  document.getElementById("p-horario").value = item.tiempo || "mañana";
+  document.getElementById("p-dias").value = "todos";
+  document.getElementById("p-inicio").value = todayKey();
+  document.getElementById("p-duracion").value = item.duracion || "";
+  document.getElementById("p-nota").value = item.nota || "";
+
+  document.getElementById("save-product-btn").textContent = "Activar producto";
+  document.getElementById("delete-product-btn").style.display = "none";
 
   openAddModal();
 }
