@@ -2122,6 +2122,7 @@ cargarClima();
 function mostrarProductosExistentes(){
   const existentes = [];
 
+  // 🔹 Convertimos planObj en lista plana
   Object.entries(planObj || {}).forEach(([categoria, tiempos])=>{
     Object.entries(tiempos || {}).forEach(([tiempo, productos])=>{
       Object.entries(productos || {}).forEach(([nombre, cfg])=>{
@@ -2137,6 +2138,86 @@ function mostrarProductosExistentes(){
       });
     });
   });
+
+  if(!existentes.length){
+    alert("No encontré productos existentes.");
+    return;
+  }
+
+  // 🔹 Agrupar por categoría
+  const agrupado = {};
+
+  existentes.forEach(p=>{
+    if(!agrupado[p.categoria]){
+      agrupado[p.categoria] = [];
+    }
+
+    // evitar duplicados
+    if(!agrupado[p.categoria].some(x => x.nombre === p.nombre)){
+      agrupado[p.categoria].push(p);
+    }
+  });
+
+  // 🔹 Ordenar categorías y productos
+  const categoriasOrdenadas = Object.keys(agrupado).sort();
+
+  categoriasOrdenadas.forEach(cat=>{
+    agrupado[cat].sort((a,b)=> a.nombre.localeCompare(b.nombre));
+  });
+
+  // 🔹 Construir HTML
+  let html = `
+    <div class="modal" style="display:flex;">
+      <div class="modal-card">
+        <div class="modal-top">
+          <div>
+            <div class="modal-title">Producto existente</div>
+            <div class="modal-subtitle">Selecciona uno</div>
+          </div>
+          <button class="modal-close" onclick="closeExistentes()">×</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:18px; margin-top:16px;">
+  `;
+
+  let index = 0;
+  window.__existentesTemp = [];
+
+  categoriasOrdenadas.forEach(cat=>{
+    html += `
+      <div>
+        <div style="font-size:13px; font-weight:600; opacity:.6; margin-bottom:6px;">
+          ${escapeHtml(cat)}
+        </div>
+    `;
+
+    agrupado[cat].forEach(p=>{
+      window.__existentesTemp.push(p);
+
+      html += `
+        <button class="small-btn" style="padding:14px; text-align:left; margin-bottom:6px;"
+          onclick="seleccionarExistente(${index})">
+          ${escapeHtml(p.nombre)}
+        </button>
+      `;
+
+      index++;
+    });
+
+    html += `</div>`;
+  });
+
+  html += `
+        </div>
+      </div>
+    </div>
+  `;
+
+  const div = document.createElement("div");
+  div.id = "existentes-modal";
+  div.innerHTML = html;
+  document.body.appendChild(div);
+}
 
   if(!existentes.length){
     alert("No encontré productos existentes.");
