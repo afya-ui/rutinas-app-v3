@@ -2401,6 +2401,20 @@ if(duplicado && !editingItem && !restartingItem){
     alert("Error: " + e.message);
   }
 }
+  document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    console.log("App volvió a primer plano → refrescando");
+    cargar();
+  }
+});
+  window.addEventListener("focus", () => {
+  console.log("App en foco → refrescando");
+  cargar();
+});
+  setInterval(() => {
+  console.log("Auto refresh cada 60s");
+  cargar();
+}, 60000);
 </script>
 </body>
 </html>
