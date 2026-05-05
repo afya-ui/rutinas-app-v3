@@ -777,7 +777,7 @@ h1{
       <div class="view-mode" aria-label="Modo de vista">
         <button id="btn-hoy" type="button" onclick="setViewMode('hoy')">Hoy</button>
         <button id="btn-ritmo" type="button" onclick="setViewMode('ritmo')">Mi ritmo</button>
-        <button id="btn-add" type="button" onclick="openAddModal()">Agregar</button>
+        <button id="btn-add" type="button" onclick="openAddMenu()">Agregar</button>
       </div>
       <select id="time-filter" onchange="setTimeFilter(this.value)" aria-label="Ver rutina">
         <option value="todo">Todo</option>
@@ -900,7 +900,27 @@ h1{
     <div id="modal-content"></div>
   </div>
 </div>
+<div class="modal" id="add-menu-modal">
+  <div class="modal-card">
+    <div class="modal-top">
+      <div>
+        <div class="modal-title">Agregar</div>
+        <div class="modal-subtitle">¿Qué quieres hacer?</div>
+      </div>
+      <button class="modal-close" onclick="closeAddMenu()">×</button>
+    </div>
 
+    <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
+      <button onclick="abrirNuevoProducto()" class="small-btn" style="padding:16px; font-size:16px;">
+        Producto nuevo
+      </button>
+
+      <button onclick="abrirProductoExistente()" class="small-btn" style="padding:16px; font-size:16px;">
+        Producto existente
+      </button>
+    </div>
+  </div>
+</div>
 <script>
 const API = "/.netlify/functions/sheets";
 const TIMES = ["manana","tarde","noche"];
@@ -1905,7 +1925,25 @@ function abrirReiniciarProducto(rowNumber){
 
   openAddModal();
 }
-  
+
+function openAddMenu(){
+  document.getElementById("add-menu-modal").style.display = "flex";
+}
+
+function closeAddMenu(){
+  document.getElementById("add-menu-modal").style.display = "none";
+}
+
+function abrirNuevoProducto(){
+  closeAddMenu();
+  resetAddModal();
+  openAddModal();
+}
+
+function abrirProductoExistente(){
+  closeAddMenu();
+  mostrarProductosExistentes();
+}
 function render(){
   document.getElementById("main-title").textContent = viewMode === "ritmo" ? "Mi ritmo" : "Hoy";
   if(!document.getElementById("date-line").textContent){
@@ -2080,6 +2118,9 @@ cargarClima();
   document.getElementById("add-modal").style.display = "flex";
 }
 
+function mostrarProductosExistentes(){
+  alert("Aquí vamos a mostrar productos existentes.\n\nSiguiente paso: construir lista desde la base de datos.");
+}
 function closeAddModal(){
   document.getElementById("add-modal").style.display = "none";
   resetAddModal();
